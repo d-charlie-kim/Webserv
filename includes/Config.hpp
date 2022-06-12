@@ -28,39 +28,34 @@
 
 struct Location
 {
-	std::string root;
-	std::string index; // 여러개 
-	std::string	cgi;
-	std::string methods; // 여러개
-	// bool methods[3];
+	bool						auto_index;
+	int							methods;
+	int							client_max_body_size;
+	std::string					root;
+	std::string					route; //path
+	std::vector<std::string>	v_index;
+	std::pair<std::vector<int>, std::string>	p_error_page;
+	std::pair<int, std::string>	p_return; //없을때 int값 0
+	std::string					cgi;
+
+	Location();
+	~Location();
+	Location(const Location& default);
 };
 
 struct Server
 {
-	int			port_number;
-	int			limit_body_size;
-	bool		auto_index;
-	std::string host;
-	std::string server_name;
-	std::string default_error_page;
-	std::vector<struct Location> location;
+	std::pair<std::string, int>		__listen;
+	std::string						__server_name;
+	struct Location					__default_location;
+	std::vector<struct Location>	__location;
 };
 
-class Config {
+class Configure {
 	private:
-		int			port_number;
-		int			limit_body_size;
-		bool		auto_index;
-		std::string	cgi;
-		std::string host;
-		std::string server_name;
-		std::string default_error;
-		std::string root;
-		std::string methods;
+		
 	public:
-	Config()
-		: port_number(8080), limit_body_size(2000), ... {};
-	~Config();
+
 };
 
 #endif
