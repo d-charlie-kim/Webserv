@@ -1,7 +1,7 @@
 #include <iostream>
 #include <exception>
 #include <string>
-#include "../includes/Parsing.hpp"
+#include "../includes/Configure.hpp"
 #include "../includes/Server.hpp"
 #include "../includes/error.hpp"
 
@@ -15,17 +15,20 @@ static bool conf_path_valid_check(const char* str)
 
 int main(int argc, char *argv[])
 {
-	std::vector<struct Server> server_list;
-	server_list.push_back("default");
+	Configure	conf;
+	conf.v_server_list.push_back("default");
+	// std::vector<struct Server> v_server_list;
+	// v_server_list.push_back("default");
 
 	try
 	{
 		if (argc == 1)
-			parsing("../config/default.conf", server_list);
+			conf.file_path = "../config/default.conf";
 		else if (argc == 2 && conf_path_valid_check(argv[1]))
-			parsing(argv[1], server_list);
+			conf.file_path = argv[1];
 		else
 			throw ArgumentCountError();
+		parsing(conf);
 	}
 	catch(std::exception &e)
 	{

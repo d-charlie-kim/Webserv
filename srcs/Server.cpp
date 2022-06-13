@@ -12,11 +12,11 @@ p_return(),
 cgi()
 {
 	add_methods_get();
-	std::cout << "Default Location Created\n";
+	// std::cout << "Default Location Created\n";
 }
 
 Location::~Location() {
-	std::cout << "Location Deleted\n";
+	// std::cout << "Location Deleted\n";
 }
 
 Location::Location(const struct Location& default_location)
@@ -30,7 +30,7 @@ p_error_page(default_location.p_error_page),
 p_return(default_location.p_return),
 cgi(default_location.cgi)
 {
-	std::cout << "Location Created by Copying Default Location\n";
+	// std::cout << "Location Created by Copying Default Location\n";
 }
 
 void Location::add_methods_get() { methods = methods | 0x01; }
@@ -46,11 +46,10 @@ Server::Server(const char* default_name)
 {
 	std::string temp(default_name);
 	server_name = temp;
-	std::cout << "Server List Created\n";
+	// std::cout << "Server List Created\n";
 }
 
 Server::~Server()
 {
-	std::cout << "[ " << server_name << " ] Server Deleted\n";
+	// std::cout << "[ " << server_name << " ] Server Deleted\n";
 }
-

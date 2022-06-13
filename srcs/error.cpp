@@ -14,3 +14,8 @@ const char* OpenError::what() const throw()
 {
 	return ("ERROR: Open Failed");
 };
+
+const char* ConfigureFileWrongError::what() const throw()
+{
+	return ("ERROR: Configure File is Something Wrong");
+};

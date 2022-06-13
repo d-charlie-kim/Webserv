@@ -21,4 +21,10 @@ class OpenError : public std::exception
 		const char* what() const throw();
 };
 
+class ConfigureFileWrongError : public std::exception
+{
+	public:
+		const char* what() const throw();
+};
+
 #endif
