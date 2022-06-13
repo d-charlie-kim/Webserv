@@ -7,16 +7,6 @@
 #include "../includes/Server.hpp"
 #include "../includes/error.hpp"
 
-void set_conf_server(std::string read_line, struct Configure& conf)
-{
-
-}
-
-void set_conf_location(std::string read_line, struct Configure& conf)
-{
-
-}
-
 static bool brace_check(std::string read_line, struct Configure& conf)
 {
 	std::string			keyword;
@@ -25,6 +15,9 @@ static bool brace_check(std::string read_line, struct Configure& conf)
 
 	if (keyword == "{")
 	{
+		iss >> keyword;
+		if (iss.good())
+			throw ConfigureFileWrongError("Strict rule about the \'Brace\'");
 		if (conf.server_flag && !conf.location_flag && conf.s_brace.empty())
 		{
 			conf.s_brace.push(SERVER);
@@ -39,10 +32,13 @@ static bool brace_check(std::string read_line, struct Configure& conf)
 			return true;
 		}
 		else
-			throw ConfigureFileWrongError();
+			throw ConfigureFileWrongError("ERROR, Configure File\n : \'Brace\' is something wrong");
 	}
 	else if (keyword == "}")
 	{
+		iss >> keyword;
+		if (iss.good())
+			throw ConfigureFileWrongError("ERROR, Configure File\n : Strict rule about the \'Brace\'");
 		if (conf.server_flag && conf.location_flag && conf.s_brace.top() == LOCATION)
 		{
 			conf.s_brace.pop();
@@ -56,7 +52,7 @@ static bool brace_check(std::string read_line, struct Configure& conf)
 			return true;
 		}
 		else
-			throw ConfigureFileWrongError();
+			throw ConfigureFileWrongError("ERROR, Configure File\n : \'Brace\' is something wrong");
 	}
 	return false;
 }
@@ -70,18 +66,24 @@ static bool server_location_check(std::string read_line, struct Configure& conf)
 	if (keyword == "server" && !conf.server_flag)
 	{
 		conf.server_flag = true;
-		// 끝났는지 체크 안 끝났으면 에러
+		iss >> keyword;
+		if (iss.good())
+			throw ConfigureFileWrongError("ERROR, Configure File\n : There is something after \'server\' word");
 		return true;
 	}
 	else if (keyword == "location" && conf.server_flag && !conf.location_flag)
 	{
 		conf.location_flag = true;
-		// 뒤에 더 없으면 error
-		// 뒤 체크 해줘서 route에 넣어주기
+
 		std::string route;
 		iss >> route;
+		if (iss.fail())
+			throw ConfigureFileWrongError("ERROR, Configure File\n : There is no route after \'location\'");
 		conf.v_server_list.back().default_location.route = route;
-		// route valid check + 뒤에 뭐 더 붙어 있으면 error
+		iss >> route;
+		if (iss.good())
+			throw ConfigureFileWrongError("ERROR, Configure File\n : There is something after \'location \\route\'");
+		//route path valid check
 		return true;
 	}
 	return false;
@@ -107,7 +109,7 @@ static void classify(struct Configure& conf, std::string read_line)
 		else if (conf.s_brace.top() == LOCATION)
 			set_conf_location(read_line, conf);
 		else
-			throw ConfigureFileWrongError();
+			throw ConfigureFileWrongError("ERROR, Configure File\n : There is wrong string");
 	}
 }
 

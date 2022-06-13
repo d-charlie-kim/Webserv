@@ -14,10 +14,11 @@ struct Configure
 	bool						location_flag;
 	std::string					file_path;
 	std::stack<int>				s_brace;
-
 	std::vector<struct Server>	v_server_list;
 };
 
 void parsing(struct Configure& conf);
+void set_conf_location(std::string read_line, struct Configure& conf);
+void set_conf_server(std::string read_line, struct Configure& conf);
 
 #endif

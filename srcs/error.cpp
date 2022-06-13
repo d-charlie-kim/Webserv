@@ -1,4 +1,5 @@
 #include "../includes/error.hpp"
+#include <string>
 
 const char* ArgumentCountError::what() const throw()
 {
@@ -15,7 +16,8 @@ const char* OpenError::what() const throw()
 	return ("ERROR: Open Failed");
 };
 
+ConfigureFileWrongError::ConfigureFileWrongError(std::string msg) :__msg(msg) {};
 const char* ConfigureFileWrongError::what() const throw()
 {
-	return ("ERROR: Configure File is Something Wrong");
+	return (__msg.c_str());
 };

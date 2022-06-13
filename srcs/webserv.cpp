@@ -5,6 +5,25 @@
 #include "../includes/Server.hpp"
 #include "../includes/error.hpp"
 
+
+// This is test code printing the Configure File to check parsing is done well
+
+#include <vector>
+void print_conf(struct Configure conf)
+{
+	std::cout << "---- [ TEST START ] ----\n";
+	std::cout << "\n Numbers of Server : " << conf.v_server_list.size() << std::endl;
+	std::cout << std::endl;
+
+	int	count = 1;
+	for (std::vector<int>::iterator iter = conf.v_server_list.begin(); iter != conf.v_server_list.end(); iter++)
+	{
+		std::cout << "   <<  No." << count << " Server  >>\n";
+		
+	}
+}
+
+
 static bool conf_path_valid_check(const char* str)
 {
 	std::string tmp(str);
@@ -17,8 +36,6 @@ int main(int argc, char *argv[])
 {
 	Configure	conf;
 	conf.v_server_list.push_back("default");
-	// std::vector<struct Server> v_server_list;
-	// v_server_list.push_back("default");
 
 	try
 	{
@@ -29,6 +46,8 @@ int main(int argc, char *argv[])
 		else
 			throw ArgumentCountError();
 		parsing(conf);
+		print_conf(conf);
+		// execute(conf.v_server_list);
 	}
 	catch(std::exception &e)
 	{
