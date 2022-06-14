@@ -35,7 +35,7 @@ static bool conf_path_valid_check(const char* str)
 int main(int argc, char *argv[])
 {
 	Configure	conf;
-	conf.v_server_list.push_back("default");
+	conf.v_server_list.push_back(1);
 
 	try
 	{
