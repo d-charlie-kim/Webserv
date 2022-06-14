@@ -68,7 +68,7 @@ static bool server_location_check(std::string read_line, struct Configure& conf)
 		conf.server_flag = true;
 		iss >> keyword;
 		if (iss.good())
-			throw ConfigureFileWrongError("ERROR, Configure File\n : There is something after \'server\' word");
+			throw ConfigureFileWrongError("ERROR, Configure File\n : Something after \'server\' word");
 		return true;
 	}
 	else if (keyword == "location" && conf.server_flag && !conf.location_flag)
@@ -78,11 +78,11 @@ static bool server_location_check(std::string read_line, struct Configure& conf)
 		std::string route;
 		iss >> route;
 		if (iss.fail())
-			throw ConfigureFileWrongError("ERROR, Configure File\n : There is no route after \'location\'");
+			throw ConfigureFileWrongError("ERROR, Configure File\n : No route after \'location\'");
 		conf.v_server_list.back().default_location.route = route;
 		iss >> route;
 		if (iss.good())
-			throw ConfigureFileWrongError("ERROR, Configure File\n : There is something after \'location \\route\'");
+			throw ConfigureFileWrongError("ERROR, Configure File\n : Something after \'location \\route\'");
 		//route path valid check
 		return true;
 	}
@@ -105,11 +105,11 @@ static void classify(struct Configure& conf, std::string read_line)
 	else
 	{
 		if (conf.s_brace.top() == SERVER)
-			set_conf_server(read_line, conf);
+			set_conf_server(read_line, conf.v_server_list);
 		else if (conf.s_brace.top() == LOCATION)
-			set_conf_location(read_line, conf);
+			set_conf_location(read_line, conf.v_server_list.back().v_location);
 		else
-			throw ConfigureFileWrongError("ERROR, Configure File\n : There is wrong string");
+			throw ConfigureFileWrongError("ERROR, Configure File\n : Wrong component");
 	}
 }
 

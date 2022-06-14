@@ -16,11 +16,11 @@ void print_conf(struct Configure conf)
 	std::cout << std::endl;
 
 	int	count = 1;
-	for (std::vector<int>::iterator iter = conf.v_server_list.begin(); iter != conf.v_server_list.end(); iter++)
-	{
-		std::cout << "   <<  No." << count << " Server  >>\n";
+	// for (std::vector<int>::iterator iter = conf.v_server_list.begin(); iter != conf.v_server_list.end(); iter++)
+	// {
+	// 	std::cout << "   <<  No." << count << " Server  >>\n";
 		
-	}
+	// }
 }
 
 
@@ -40,13 +40,14 @@ int main(int argc, char *argv[])
 	try
 	{
 		if (argc == 1)
-			conf.file_path = "../config/default.conf";
+			conf.file_path = "../config/simple.conf";
 		else if (argc == 2 && conf_path_valid_check(argv[1]))
 			conf.file_path = argv[1];
 		else
 			throw ArgumentCountError();
 		parsing(conf);
 		print_conf(conf);
+		// validate(conf.v_server_list);
 		// execute(conf.v_server_list);
 	}
 	catch(std::exception &e)
