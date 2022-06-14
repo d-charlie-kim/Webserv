@@ -7,7 +7,7 @@
 
 
 // This is test code printing the Configure File to check parsing is done well
-
+/*
 #include <vector>
 void print_conf(struct Configure conf)
 {
@@ -15,14 +15,14 @@ void print_conf(struct Configure conf)
 	std::cout << "\n Numbers of Server : " << conf.v_server_list.size() << std::endl;
 	std::cout << std::endl;
 
-	int	count = 1;
+	// int	count = 1;
 	// for (std::vector<int>::iterator iter = conf.v_server_list.begin(); iter != conf.v_server_list.end(); iter++)
 	// {
 	// 	std::cout << "   <<  No." << count << " Server  >>\n";
 		
 	// }
 }
-
+*/
 
 static bool conf_path_valid_check(const char* str)
 {
@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
 		else
 			throw ArgumentCountError();
 		parsing(conf);
-		print_conf(conf);
+		// print_conf(conf);
 		// validate(conf.v_server_list);
 		// execute(conf.v_server_list);
 	}

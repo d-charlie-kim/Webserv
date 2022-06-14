@@ -98,6 +98,8 @@ static void classify(struct Configure& conf, std::string read_line)
 	std::stringstream	iss(read_line);
 	iss >> keyword;
 
+	std::cout << read_line << std::endl;
+
 	if (server_location_check(read_line, conf))
 		return ;
 	else if (brace_check(read_line, conf))

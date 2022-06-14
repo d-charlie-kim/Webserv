@@ -94,4 +94,5 @@ void set_conf_server(std::string read_line, std::vector<struct Server> v_server_
 	iss >> eof_check;
 	if (iss.good())
 		throw ConfigureFileWrongError("ERROR, Configure File\n : Wrong component value");
+	iss.str("");
 }

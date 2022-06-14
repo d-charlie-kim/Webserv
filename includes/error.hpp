@@ -28,6 +28,7 @@ class ConfigureFileWrongError : public std::exception
 		std::string	__msg;
 	public:
 		ConfigureFileWrongError(std::string msg);
+		~ConfigureFileWrongError() _NOEXCEPT;
 		const char* what() const throw();
 };
 

@@ -70,6 +70,14 @@ void set_conf_location(std::string read_line, std::vector<struct Location> v_loc
 		iss >> value;
 		v_location.back().cgi = value;
 	}
+	else if (key == "return")
+	{
+		int return_num;
+		iss >> return_num;
+		v_location.back().p_return.first = return_num;
+		iss >> value;
+		v_location.back().p_return.second = value;
+	}
 	else
 		throw ConfigureFileWrongError("ERROR, Configure File\n : Wrong component");
 
