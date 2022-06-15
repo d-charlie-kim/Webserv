@@ -5,15 +5,20 @@
 #include "../includes/Config.hpp"
 #include "../includes/Server.hpp"
 
+Config::Config() { }
+Config::Config(const Config &) { }
+Config& Config::operator= (const Config &) { return *this; }
+Config::~Config() { }
+
 std::list<std::string> Config::m_next_line(int brace_check = 0)
 {
 	std::list<std::string> line;
 
 	while (brace_check >= 0)
 	{
-		if (__file.size() > 1)
-			__file.pop_front();
-		line = __file.front(); 		
+		if (__l_file.size() > 1)
+			__l_file.pop_front();
+		line = __l_file.front(); 		
 		if (brace_check && line.front() != "{")
 			throw std::invalid_argument("invalid config file");
 		brace_check--;
@@ -32,34 +37,30 @@ std::list<std::string> Config::m_split_line(std::string str)
 	return (list);
 }
 
-Config::Config() { }
-Config::Config(const Config &) { }
-Config& Config::operator= (const Config &) { return *this; }
-
-Config::~Config() { }
-
-
 void		Config::open_file(std::string &conf_name)
 {
-	std::ifstream		fs;
+	std::ifstream	fs;
 
 	fs.open(conf_name, std::ios::in);
-    if (!fs.is_open())
-    {
-        std::string conf_root = getcwd(nullptr, 1000);
-        conf_root += "/config/" + conf_name;
-        fs.open(conf_root);
-        if (!fs.is_open())
-            throw std::invalid_argument("Conf file does not exist");
-    }
+	if (!fs.is_open())
+	{
+		std::string conf_root = getcwd(nullptr, 1000);
+		conf_root += "/config/" + conf_name;
+		fs.open(conf_root);
+		if (!fs.is_open())
+			throw std::invalid_argument("Conf file does not exist");
+	}
 	while (!fs.eof())
 	{
 		std::string str;
 		getline(fs >> std::ws, str);
 		str = str.substr(0, str.find('#'));
-		std::list<std::string> list = m_split_line(str); // 수정
+		std::list<std::string> list = m_split_line(str);
+		// # 띄우고 적으면 체크가 되는데
+		// #붙이고 적으면 체크가 안될 것 같습니다.
+		// str[0] == # 이라면 continue ; 로 체크해도 괜찮을 것 같습니다.
 		if (*(list.begin()->begin()) != '#' && str.size())
-			__file.push_back(list);
+			__l_file.push_back(list);
 	}
 	fs.close();
 }
@@ -111,9 +112,9 @@ void		Config::m_parse_return(std::list<std::string>& line, Location& loc){}
 
 void		Config::m_parse_server(std::list<std::string> &line)
 {
-	if (__brace.size())
+	if (__s_brace.size())
 		throw std::invalid_argument("invalid config file");
-	__brace.push("server");
+	__s_brace.push("server");
 	Server	new_server;
 	line = m_next_line(1);
 	
@@ -125,7 +126,7 @@ void		Config::m_parse_server(std::list<std::string> &line)
 	
 	Location	default_location;
 	new_server.default_location = m_parse_location(line, default_location);
-	while (line.front() != "}" && __file.size())
+	while (line.front() != "}" && __l_file.size())
 	{
 		if (line.front() != "location" || line.size() != 2)
 			throw std::invalid_argument("invalid config file");
@@ -135,14 +136,14 @@ void		Config::m_parse_server(std::list<std::string> &line)
 		new_server.location.push_back(m_parse_location(line, new_location));
 		line = m_next_line(0);
 	}
-	__server_list.push_back(new_server);
+	__v_server_list.push_back(new_server);
 	if (line.front() != "}")
 		throw std::invalid_argument("invalid config file");
-	std::cout << __file.size() << std::endl;
-	if (__file.size())
+	std::cout << __l_file.size() << std::endl;
+	if (__l_file.size())
 		line = m_next_line(0);
-	__brace.pop();
-	if (__brace.size())
+	__s_brace.pop();
+	if (__s_brace.size())
 		throw std::invalid_argument("invalid config file");
 }
 
@@ -241,8 +242,8 @@ void		Config::m_is_valid_error_code(int code)
 
 void		Config::parse_file()
 {
-	std::list<std::string> line = __file.front();
-	while (__file.size() > 1)
+	std::list<std::string> line = __l_file.front();
+	while (__l_file.size() > 1)
 	{
 		if (line.size() != 1 || line.front() != "server")
 			throw std::invalid_argument("invalid config file");
@@ -253,4 +254,4 @@ void		Config::parse_file()
 
 
 
-std::vector<Server> Config::get_server_list() const { return __server_list; }
+std::vector<Server> Config::get_server_list() const { return __v_server_list; }
