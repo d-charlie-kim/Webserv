@@ -68,33 +68,27 @@ void		Config::m_parse_root(std::list<std::string>& line, Location& loc)
 		throw std::invalid_argument("invalid config file");
 	if (line.back().front() == '/')
 	{
-		std::fstream fs(line.back());
-		if (!fs.is_open())
-			throw std::invalid_argument("invalid root path");
 		loc.root = line.back();
 	}
 	else
 	{
 		std::string root = getcwd(nullptr, 1000);
 		root += "/" + line.back();
-		std::fstream fs(root);
-		if (!fs.is_open())
-			throw std::invalid_argument("invalid root path");
 		loc.root = root;
 	}
 }
 
 void		Config::m_parse_index(std::list<std::string>& line, Location& loc)
 {
-			line.pop_front();
-			if (line.empty())
-				throw std::invalid_argument("invalid config file");
-			loc.v_index.clear();
-			while (line.size())
-			{
-				loc.v_index.push_back(line.front());
-				line.pop_front();
-			}
+	line.pop_front();
+	if (line.empty())
+		throw std::invalid_argument("invalid config file");
+	loc.v_index.clear();
+	while (line.size())
+	{
+		loc.v_index.push_back(line.front());
+		line.pop_front();
+	}
 }
 
 void		Config::m_parse_allow_methods(std::list<std::string>& line, Location& loc)
@@ -162,9 +156,9 @@ void		Config::m_parse_clent_max_body_size(std::list<std::string>& line, Location
 
 void		Config::m_parse_auto_index(std::list<std::string>& line, Location& loc)
 {
-			if (line.size() < 2 || (line.back() != "on" && line.back() != "off"))
+	if (line.size() != 2 || (line.back() != "on" && line.back() != "off"))
 				throw std::invalid_argument("invalid config file");
-			loc.auto_index = line.back() == "on";
+	loc.auto_index = line.back() == "on";
 }
 
 void		Config::m_parse_return(std::list<std::string>& line, Location& loc)
@@ -184,7 +178,7 @@ void		Config::m_parse_cgi_extension(std::list<std::string>& line, Location& loc)
 {
 	if (line.size() != 2)
 		throw std::invalid_argument("invalid config file");
-	if ((line.back())[0] != '.')
+	if (line.back().front() != '.')
 		throw std::invalid_argument("invalid cgi_extension");
 	loc.cgi = line.back();
 }
