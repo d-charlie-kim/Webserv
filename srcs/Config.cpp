@@ -73,7 +73,7 @@ void		Config::m_parse_root(std::list<std::string>& line, Location& loc)
 {
 	if (line.size() != 2)
 		throw std::invalid_argument("invalid config file");
-	if ((line.back())[0] == '/')
+	if (line.back().front() == '/')
 	{
 		std::fstream fs(line.back());
 		if (!fs.is_open())
