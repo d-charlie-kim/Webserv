@@ -8,7 +8,7 @@
 Config::Config() { }
 Config::~Config() { }
 
-std::vector<Server> Config::get_server_list() const { return __v_server_list; }
+std::vector<Server>& Config::get_server_list() { return __v_server_list; }
 
 std::list<std::string> Config::m_next_line(int brace_check = 0)
 {
@@ -43,7 +43,7 @@ void		Config::m_parse_listen(Server& new_server, std::list<std::string>& line)
 	if (pos != std::string::npos)
 	{
 		int dot_count = 0;
-		for (int i = 0; i < pos; i++)
+		for (size_t i = 0; i < pos; i++)
 			if (str[i] == '.')
 				dot_count++;
 		if (dot_count != 3)

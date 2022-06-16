@@ -36,4 +36,6 @@ struct Server
 	~Server();
 };
 
+void exec_server(std::vector<Server>& server_list);
+
 #endif

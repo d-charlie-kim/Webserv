@@ -38,7 +38,7 @@ class Config
 		~Config();
 		void					open_file(std::string& file_path);
 		void					parse_file();
-		std::vector<Server>		get_server_list() const;
+		std::vector<Server>&	get_server_list();
 };
 
 #endif
