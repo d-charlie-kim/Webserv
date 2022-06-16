@@ -69,8 +69,6 @@ void		Config::m_parse_root(std::list<std::string>& line, Location& loc)
 	if (line.back().front() == '/')
 	{
 		std::fstream fs(line.back());
-		if (!fs.is_open())
-			throw std::invalid_argument("invalid root path");
 		loc.root = line.back();
 	}
 	else
@@ -78,8 +76,6 @@ void		Config::m_parse_root(std::list<std::string>& line, Location& loc)
 		std::string root = getcwd(nullptr, 1000);
 		root += "/" + line.back();
 		std::fstream fs(root);
-		if (!fs.is_open())
-			throw std::invalid_argument("invalid root path");
 		loc.root = root;
 	}
 }
@@ -95,18 +91,6 @@ void		Config::m_parse_index(std::list<std::string>& line, Location& loc)
 		loc.v_index.push_back(line.front());
 		line.pop_front();
 	}
-	std::ifstream	fs;
-	bool open_check = false;
-	for (unsigned long i = 0; i < loc.v_index.size(); i++)
-	{
-		fs.open(loc.route + loc.v_index[i]);
-		if (!fs.is_open())
-			continue;
-		fs.close();
-		open_check = true;
-	}
-	if (!open_check)
-		loc.v_index.clear();
 }
 
 void		Config::m_parse_allow_methods(std::list<std::string>& line, Location& loc)
@@ -201,15 +185,6 @@ void		Config::m_parse_cgi_extension(std::list<std::string>& line, Location& loc)
 	loc.cgi = line.back();
 }
 
-void		Config::m_check_auto_index(Location& loc)
-{
-	if (loc.auto_index == false)
-	{
-		if (loc.v_index.size())
-			loc.v_index.push_back("/error_page_404.html");
-	}
-}
-
 Location	Config::m_parse_location(std::list<std::string>& line, Location& loc, Server& new_server)
 {
 	while (line.front() != "}" && line.front() != "location")
@@ -256,7 +231,6 @@ void		Config::m_parse_server(std::list<std::string> &line)
 		new_location.route = line.back();
 		line = m_next_line(1);
 		new_server.location.push_back(m_parse_location(line, new_location, new_server));
-		m_check_auto_index(new_location);
 		if (line.size() != 1)
 			throw std::invalid_argument("invalid config file");
 		line = m_next_line(0);
