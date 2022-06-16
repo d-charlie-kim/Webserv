@@ -73,7 +73,22 @@ void		Config::m_parse_root(std::list<std::string>& line, Location& loc)
 {
 	if (line.size() != 2)
 		throw std::invalid_argument("invalid config file");
-	loc.root = line.back();
+	if ((line.back())[0] == '/')
+	{
+		std::fstream fs(line.back());
+		if (!fs.is_open())
+			throw std::invalid_argument("invalid root path");
+		loc.root = line.back();
+	}
+	else
+	{
+		std::string root = getcwd(nullptr, 1000);
+		root += "/" + line.back();
+		std::fstream fs(root);
+		if (!fs.is_open())
+			throw std::invalid_argument("invalid root path");
+		loc.root = root;
+	}
 }
 
 void		Config::m_parse_index(std::list<std::string>& line, Location& loc)
@@ -91,22 +106,28 @@ void		Config::m_parse_index(std::list<std::string>& line, Location& loc)
 
 void		Config::m_parse_allow_methods(std::list<std::string>& line, Location& loc)
 {
-			const char *method[3] = {"GET", "POST", "DELETE"};
-			line.pop_front();
-			if (line.empty())
-				throw std::invalid_argument("invalid config file");
-			loc.methods = 0;
-			while (line.size())
+	const char *method[3] = {"GET", "POST", "DELETE"};
+	int bit[3] = {0x01, 0x01 << 1, 0x01 << 2};
+	line.pop_front();
+	if (line.empty())
+		throw std::invalid_argument("invalid config file");
+	loc.methods = 0;
+	while (line.size())
+	{
+		int i = 0;
+		while (i < 3)
+		{
+			if (line.front() == method[i])
 			{
-				int bit = 0x01;
-				for (int i = 0; i < 3; i++)
-				{
-					if (line.front() == method[i])
-						loc.methods |= bit;
-					bit <<= 1;
-				}
-				line.pop_front();
+				loc.methods |= bit[i];
+				break ;
 			}
+			i++;
+		}
+		if (i == 3)
+			throw std::invalid_argument("invalid method type");
+		line.pop_front();
+	}
 }
 
 void		Config::m_parse_error_page(std::list<std::string>& line, Location& loc)
@@ -154,9 +175,11 @@ void		Config::m_parse_return(std::list<std::string>& line, Location& loc)
 
 void		Config::m_parse_cgi_extension(std::list<std::string>& line, Location& loc)
 {
-			if (line.size() != 2)
-				throw std::invalid_argument("invalid config file");
-			loc.cgi = line.back();
+	if (line.size() != 2)
+		throw std::invalid_argument("invalid config file");
+	if ((line.back())[0] != '.')
+		throw std::invalid_argument("invalid cgi_extension");
+	loc.cgi = line.back();
 }
 
 Location	Config::m_parse_location(std::list<std::string>& line, Location& loc, Server& new_server)
