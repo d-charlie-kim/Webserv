@@ -1,25 +1,28 @@
 #ifndef	SERVER_HPP
 #define	SERVER_HPP
-#include <iostream>
 
+#include <iostream>
 #include <vector>
 #include <stack>
 
 struct Location
 {
-	bool						auto_index;
-	int							methods;
-	int							client_max_body_size;
-	std::pair<std::vector<int>, std::string>	p_error_page;
-	std::string					root;
-	std::string					route; //path
-	std::vector<std::string>	v_index;
-	std::pair<int, std::string>	p_return;
-	std::string					cgi;
+	private:
+		// Location& Location::operator=(const )
+	public:
+		bool						auto_index;
+		int							methods;
+		int							client_max_body_size;
+		std::pair<std::vector<int>, std::string>	p_error_page;
+		std::string					root;
+		std::string					route;
+		std::vector<std::string>	v_index;
+		std::pair<int, std::string>	p_return;
+		std::string					cgi;
 
-	Location();
-	~Location();
-	Location(const Location& default_location);
+		Location();
+		~Location();
+		Location(const Location& default_location);
 };
 
 struct Server
