@@ -68,14 +68,12 @@ void		Config::m_parse_root(std::list<std::string>& line, Location& loc)
 		throw std::invalid_argument("invalid config file");
 	if (line.back().front() == '/')
 	{
-		std::fstream fs(line.back());
 		loc.root = line.back();
 	}
 	else
 	{
 		std::string root = getcwd(nullptr, 1000);
 		root += "/" + line.back();
-		std::fstream fs(root);
 		loc.root = root;
 	}
 }
@@ -180,7 +178,7 @@ void		Config::m_parse_cgi_extension(std::list<std::string>& line, Location& loc)
 {
 	if (line.size() != 2)
 		throw std::invalid_argument("invalid config file");
-	if ((line.back())[0] != '.')
+	if (line.back().front() != '.')
 		throw std::invalid_argument("invalid cgi_extension");
 	loc.cgi = line.back();
 }
