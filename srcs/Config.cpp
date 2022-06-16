@@ -26,13 +26,6 @@ std::list<std::string> Config::m_next_line(int brace_check = 0)
 	return (line);
 }
 
-void		Config::m_is_valid_error_code(int code)
-{
-	if (code < 300)
-		throw std::invalid_argument("invalid config file");
-}
-
-
 void		Config::m_parse_listen(Server& new_server, std::list<std::string>& line)
 {
 	if (line.size() != 2)
@@ -132,19 +125,29 @@ void		Config::m_parse_allow_methods(std::list<std::string>& line, Location& loc)
 
 void		Config::m_parse_error_page(std::list<std::string>& line, Location& loc)
 {
-			line.pop_front();
-			if (line.size() < 2)
-				throw std::invalid_argument("invalid config file");
-			loc.p_error_page.second = line.back();
-			line.pop_back();
-			loc.p_error_page.first.clear();
-			while (line.size())
-			{
-				int code = atoi(line.front().c_str());
-				m_is_valid_error_code(code);
-				loc.p_error_page.first.push_back(code);
-				line.pop_front();
-			}
+	line.pop_front();
+	if (line.size() < 2)
+		throw std::invalid_argument("invalid config file");
+
+	std::ifstream fs;
+
+	// check valid error_page
+	fs.open(line.back(), std::ios::in);
+	if (!fs.is_open())
+		throw std::invalid_argument("cannot find error_page");
+	fs.close();
+	loc.p_error_page.second = line.back();
+	line.pop_back();
+
+	loc.p_error_page.first.clear();
+	while (line.size())
+	{
+		int code = atoi(line.front().c_str());
+		if (code < 300)
+			throw std::invalid_argument("invalid config file");
+		loc.p_error_page.first.push_back(code);
+		line.pop_front();
+	}
 }
 
 void		Config::m_parse_clent_max_body_size(std::list<std::string>& line, Location& loc)
@@ -166,11 +169,15 @@ void		Config::m_parse_auto_index(std::list<std::string>& line, Location& loc)
 
 void		Config::m_parse_return(std::list<std::string>& line, Location& loc)
 {
-			line.pop_front();
-			if (line.size() != 2 || atoi(line.front().c_str()) != 301)
-				throw std::invalid_argument("invalid config file");
-			loc.p_return.first = 301;
-			loc.p_return.second = line.back();
+	line.pop_front();
+	int code = atoi(line.front().c_str());
+
+	// code 300 번대 아니면 오류
+	if (line.size() != 2 || code < 300 || code > 399)
+		throw std::invalid_argument("invalid config file");
+	loc.p_return.first = code;
+
+	loc.p_return.second = line.back();
 }
 
 void		Config::m_parse_cgi_extension(std::list<std::string>& line, Location& loc)
@@ -261,7 +268,7 @@ static std::list<std::string> split_line(std::string str)
 	std::list<std::string>	list;
 	std::istringstream		iss(str);
 	std::string				buf;
-	
+
 	while(iss >> buf)
 		list.push_back(buf);
 	return (list);
