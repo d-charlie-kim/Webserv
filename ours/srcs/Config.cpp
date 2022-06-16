@@ -22,7 +22,7 @@ std::list<std::string> Config::m_next_line(int brace_check = 0)
 		line = __l_file.front();
 //		// if (brace_check && line.front() != "{" && line.size() != 1)
 		if (brace_check && line.front() != "{")
-			throw std::invalid_argument("invalid config file123");
+			throw std::invalid_argument("invalid config file");
 		brace_check--;
 	}
 	return (line);
@@ -34,18 +34,18 @@ std::list<std::string> Config::m_next_line(int brace_check = 0)
 void		Config::m_is_valid_error_code(int code)
 {
 	if (code < 300)
-		throw std::invalid_argument("invalid config file444");
+		throw std::invalid_argument("invalid config file");
 }
 
 // // Location	Config::m_parse_directive(std::list<std::string>& line, Location& loc, Server& server)
-Location	Config::m_parse_location(std::list<std::string>& line, Location& loc, Server& server)
+Location	Config::m_parse_location(std::list<std::string>& line, Location& loc, Server& new_server)
 {
 	while (line.front() != "}" && line.front() != "location")
 	{
 		if (line.front() == "listen" && __s_brace.size() == 1)
-			m_parse_listen(server, line);
+			m_parse_listen(new_server, line);
 		else if (line.front() == "server_name" && __s_brace.size() == 1)
-			m_parse_server_name(server, line);
+			m_parse_server_name(new_server, line);
 		else if (line.front() == "root")
 			m_parse_root(line, loc);
 		else if (line.front() == "index")
@@ -111,7 +111,7 @@ void		Config::m_parse_server(std::list<std::string> &line)
 	{
 //		// m_parse_location_tempppp(line, default_location, new_server);
 		if (line.front() != "location" || line.size() != 2)
-			throw std::invalid_argument("invalid config file1");
+			throw std::invalid_argument("invalid config file");
 		Location	new_location = new_server.default_location;
 		// 복사 생성자 쓰지 않고 대입 연산한 이유 + 그래도 되는가
 		__s_brace.push("location");
@@ -150,9 +150,9 @@ void		Config::parse_file()
 	while (__l_file.size() > 1)
 	{
 		if (line.size() != 1 || line.front() != "server")
-			throw std::invalid_argument("invalid config file3");
+			throw std::invalid_argument("invalid config file");
 		if (__s_brace.size())
-			throw std::invalid_argument("invalid config file4");
+			throw std::invalid_argument("invalid config file");
 		__s_brace.push("server");
 		m_parse_server(line);
 	}

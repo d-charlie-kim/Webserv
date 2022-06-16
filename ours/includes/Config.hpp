@@ -18,8 +18,8 @@ class Config
 
 		std::list<std::string>	m_next_line(int brace_check);
 		void					m_parse_server(std::list<std::string>& line);
-		Location				m_parse_directive(std::list<std::string>& line, Location& loc, Server& server);
-		Location				m_parse_location(std::list<std::string>& line, Location& loc, Server& server);
+		Location				m_parse_directive(std::list<std::string>& line, Location& loc, Server& new_server);
+		Location				m_parse_location(std::list<std::string>& line, Location& loc, Server& new_server);
 		void					m_is_valid_error_code(int code);
 
 		void					m_parse_listen(Server& new_server, std::list<std::string>& line);
@@ -32,7 +32,6 @@ class Config
 		void					m_parse_auto_index(std::list<std::string>& line, Location& loc);
 		void					m_parse_return(std::list<std::string>& line, Location& loc);
 		void					m_parse_cgi_extension(std::list<std::string>& line, Location& loc);
-
 
 	public:
 		Config();
