@@ -31,6 +31,7 @@ class Config
 		void					m_parse_auto_index(std::list<std::string>& line, Location& loc);
 		void					m_parse_return(std::list<std::string>& line, Location& loc);
 		void					m_parse_cgi_extension(std::list<std::string>& line, Location& loc);
+		void					m_check_auto_index(Location& loc);
 
 	public:
 		Config();
