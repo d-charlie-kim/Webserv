@@ -10,7 +10,6 @@ Config::~Config() { }
 
 std::vector<Server> Config::get_server_list() const { return __v_server_list; }
 
-// next_line 인자로 들어오는 숫자가 건너 뛰는 라인 수 라고 직관적으로 알 수 있게 되면 좋겠다.
 std::list<std::string> Config::m_next_line(int brace_check = 0)
 {
 	std::list<std::string> line;
@@ -20,16 +19,12 @@ std::list<std::string> Config::m_next_line(int brace_check = 0)
 		if (__l_file.size() > 1)
 			__l_file.pop_front();
 		line = __l_file.front();
-//		// if (brace_check && line.front() != "{" && line.size() != 1)
-		if (brace_check && line.front() != "{")
+		if (brace_check && line.front() != "{" && line.size() != 1)
 			throw std::invalid_argument("invalid config file");
 		brace_check--;
 	}
 	return (line);
 }
-// { } 모두 next_line할때 뒤에 뭐가 있는지 체크하지 않는다.
-// { 체크는 next_line에서 if문에 하나만 추가해주면 됨
-// } 체크는 server location 각 하나씩인데...
 
 void		Config::m_is_valid_error_code(int code)
 {
@@ -37,7 +32,133 @@ void		Config::m_is_valid_error_code(int code)
 		throw std::invalid_argument("invalid config file");
 }
 
-// // Location	Config::m_parse_directive(std::list<std::string>& line, Location& loc, Server& server)
+
+void		Config::m_parse_listen(Server& new_server, std::list<std::string>& line)
+{
+	if (line.size() != 2)
+		throw std::invalid_argument("invalid config file");
+	line.pop_front();
+	std::string str = line.front();
+	size_t pos = str.rfind(':');
+	if (pos != std::string::npos)
+	{
+		int dot_count = 0;
+		for (int i = 0; i < pos; i++)
+			if (str[i] == '.')
+				dot_count++;
+		if (dot_count != 3)
+			throw std::invalid_argument("invalid config file");
+		new_server.listen.first = str.substr(0, pos);
+		str = str.substr(pos + 1);
+	}
+	std::stringstream iss(str);
+	int port;
+	iss >> port;
+	if (iss.fail() || !iss.eof() || port < 0 || port > 49151) // atoi 로는 에러가 나서 0이 return 된건지, 원래 값이 0인건지 구분할 수 없음. 그래서 stringstream 사용
+		throw std::invalid_argument("invalid config file");
+	new_server.listen.second = port;
+	line = m_next_line(0);
+}
+
+void		Config::m_parse_server_name(Server& new_server, std::list<std::string>& line)
+{
+	if (line.size() != 1)
+		throw std::invalid_argument("invalid config file");
+	line.pop_front();
+	new_server.server_name = line.front();
+	line = m_next_line(0);
+}
+
+void		Config::m_parse_root(std::list<std::string>& line, Location& loc)
+{
+	if (line.size() != 2)
+		throw std::invalid_argument("invalid config file");
+	loc.root = line.back();
+}
+
+void		Config::m_parse_index(std::list<std::string>& line, Location& loc)
+{
+			line.pop_front();
+			if (line.empty())
+				throw std::invalid_argument("invalid config file");
+			loc.v_index.clear();
+			while (line.size())
+			{
+				loc.v_index.push_back(line.front());
+				line.pop_front();
+			}
+}
+
+void		Config::m_parse_allow_methods(std::list<std::string>& line, Location& loc)
+{
+			const char *method[3] = {"GET", "POST", "DELETE"};
+			line.pop_front();
+			if (line.empty())
+				throw std::invalid_argument("invalid config file");
+			loc.methods = 0;
+			while (line.size())
+			{
+				int bit = 0x01;
+				for (int i = 0; i < 3; i++)
+				{
+					if (line.front() == method[i])
+						loc.methods |= bit;
+					bit <<= 1;
+				}
+				line.pop_front();
+			}
+}
+
+void		Config::m_parse_error_page(std::list<std::string>& line, Location& loc)
+{
+			line.pop_front();
+			if (line.size() < 2)
+				throw std::invalid_argument("invalid config file");
+			loc.p_error_page.second = line.back();
+			line.pop_back();
+			loc.p_error_page.first.clear();
+			while (line.size())
+			{
+				int code = atoi(line.front().c_str());
+				m_is_valid_error_code(code);
+				loc.p_error_page.first.push_back(code);
+				line.pop_front();
+			}
+}
+
+void		Config::m_parse_clent_max_body_size(std::list<std::string>& line, Location& loc)
+{
+			if (line.size() < 2)
+				throw std::invalid_argument("invalid config file");
+			int size = atoi(line.back().c_str());
+			if (size < 256 || size > 4096)
+				throw std::invalid_argument("invalid config file");
+			loc.client_max_body_size = size;
+}
+
+void		Config::m_parse_auto_index(std::list<std::string>& line, Location& loc)
+{
+			if (line.size() < 2 || (line.back() != "on" && line.back() != "off"))
+				throw std::invalid_argument("invalid config file");
+			loc.auto_index = line.back() == "on";
+}
+
+void		Config::m_parse_return(std::list<std::string>& line, Location& loc)
+{
+			line.pop_front();
+			if (line.size() != 2 || atoi(line.front().c_str()) != 301)
+				throw std::invalid_argument("invalid config file");
+			loc.p_return.first = 301;
+			loc.p_return.second = line.back();
+}
+
+void		Config::m_parse_cgi_extension(std::list<std::string>& line, Location& loc)
+{
+			if (line.size() != 2)
+				throw std::invalid_argument("invalid config file");
+			loc.cgi = line.back();
+}
+
 Location	Config::m_parse_location(std::list<std::string>& line, Location& loc, Server& new_server)
 {
 	while (line.front() != "}" && line.front() != "location")
@@ -64,84 +185,38 @@ Location	Config::m_parse_location(std::list<std::string>& line, Location& loc, S
 			m_parse_return(line, loc);
 		else
 			throw std::invalid_argument(line.front());
-		// 기존에는 잘못된 directive가 들어왔을 때 걸러주지 못한다.
-		// 그래서 else로 그 때 throw 해준다.
-		// 이 부분이 추가되고, 각 if문에 server때인지 location때인지 비교하는(해야하는 경우만) 케이스만 넣어주면
-		// + 구분을 위해서는 stack에 location을 넣는 부분이 있어야 한다.
-		// cgi, return은 location에만 있어야 하고 server_name과 location은 server에만 있어야 하는 경우까지 고려하여 파싱된다.
 		line = m_next_line(0);
 	}
 	return loc;
 }
 
-// Location	Config::m_parse_location_tempppp(std::list<std::string>& line, Location& loc, Server& server)
-// {
-// 	if (line.front() != "location" || line.size() != 2)
-// 			throw std::invalid_argument("invalid config file1");
-// 	Location	new_location = server.default_location;
-// 	__s_brace.push("location");
-// 	new_location.route = line.back();
-// 	line = m_next_line(1);
-// 	server.location.push_back(m_parse_directive(line, new_location, server));
-// 	line = m_next_line(0); // location } 닫는 부분
-// 	__s_brace.pop();
-// }
-
 void		Config::m_parse_server(std::list<std::string> &line)
 {
-	// parse_file 로 이동
-	// if (__s_brace.size())
-	// 	throw std::invalid_argument("invalid config file");
-	// __s_brace.push("server");
 	Server	new_server;
 	line = m_next_line(1);
-	/*
-		server 인지 아닌지 stack으로 체크가 되니까
-		같이 while문 돌면서 체크해도 괜찮겠다.	
-	*/
-	// if (line.front() == "listen")
-	// 	m_parse_listen(new_server, line);
-	// if (line.front() == "server_name")
-	// 	m_parse_server_name(new_server, line);
 	Location	default_location;
 	new_server.default_location = m_parse_location(line, default_location, new_server);
-	// location 만들어서 넣어주는 이유
-
 	while (line.front() != "}" && __l_file.size())
 	{
-//		// m_parse_location_tempppp(line, default_location, new_server);
 		if (line.front() != "location" || line.size() != 2)
 			throw std::invalid_argument("invalid config file");
-		Location	new_location = new_server.default_location;
-		// 복사 생성자 쓰지 않고 대입 연산한 이유 + 그래도 되는가
+		Location	new_location(new_server.default_location);
 		__s_brace.push("location");
 		new_location.route = line.back();
 		line = m_next_line(1);
 		new_server.location.push_back(m_parse_location(line, new_location, new_server));
-
-//		//if (line.size() != 1)
-//		//	throw std::invalid_argument("invalid config file");
-		line = m_next_line(0); // location } 닫는 부분
+		if (line.size() != 1)
+			throw std::invalid_argument("invalid config file");
+		line = m_next_line(0);
 		__s_brace.pop();
 	}
 	__v_server_list.push_back(new_server);
-
-	// 파일이 끝났거나, } 거나를 두번 중복으로 체크
-	// --> 파일이 끝났을때 error, 아니면 반드시 } 인 경우 로 if 한번만 사용
 	if (!__l_file.size())
 		throw std::invalid_argument("invalid config file2");
-	// std::cout << __l_file.size() << std::endl;
-	// if (__l_file.size())
-
-//	//if (line.size() != 1)
-//	//	throw std::invalid_argument("invalid config file");
+	if (line.size() != 1)
+		throw std::invalid_argument("invalid config file");
 	line = m_next_line(0); // server } 닫는 부분
 	__s_brace.pop();
-	// 불필요하다고 생각. __s_brace.push()는 서버 파싱 시작할때 한번밖에 하지 않는다.
-	// __s_brace.pop()도 여기서 한번밖에 해주지 않는다.
-	// 서버 파싱 시작할때 brace size 체크를 하거나, 끝날때 하거나 둘 중 하나만 남긴다.
-	// if (__s_brace.size())
-	// 	throw std::invalid_argument("invalid config file");
 }
 
 void		Config::parse_file()
@@ -162,7 +237,7 @@ static std::list<std::string> split_line(std::string str)
 {
 	std::list<std::string>	list;
 	std::istringstream		iss(str);
-	std::string buf;
+	std::string				buf;
 	
 	while(iss >> buf)
 		list.push_back(buf);
@@ -193,9 +268,6 @@ void		Config::open_file(std::string& conf_name)
 			list = split_line(str);
 			__l_file.push_back(list);
 		}
-		// 위 위 줄 덕분에 굳이 # 체크 안해도 괜찮습니다만
-		// 이 부분에서 abort에러가 뜨는데 어떻게 돌아갔을까잉
-		// if (*(list.begin()->begin()) != '#' && str.size())
 	}
 	fs.close();
 }
