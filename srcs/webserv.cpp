@@ -90,6 +90,8 @@ int main(int argc, const char *argv[])
 		std::cerr << e.what() << std::endl;
 		return (1);
 	}
+	exec_server(parser.get_server_list());
+
 
 	// std::vector<Server> server_list = parser.get_server_list();
 	// print_server_list(server_list);
