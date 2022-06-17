@@ -80,7 +80,7 @@ static void write_data_to_client(int client_fd, std::map<int, Client>& clients)
     std::map<int, Client>::iterator it = clients.find(client_fd);
     if (it != clients.end())
     {
-        clients[client_fd].respond_msg = clients[client_fd].request_msg; // 리스폰드 메시지 만드는 곳
+        clients[client_fd].respond_msg = get_html(clients[client_fd].request_msg);
         if (clients[client_fd].respond_msg != "")
         {
             int n;

@@ -37,5 +37,6 @@ struct Server
 };
 
 void exec_server(std::vector<Server>& server_list);
+std::string get_html(std::string request_msg);
 
 #endif
