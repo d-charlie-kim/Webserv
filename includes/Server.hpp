@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <stack>
+#include "Client.hpp"
 
 struct Location
 {
@@ -37,6 +38,6 @@ struct Server
 };
 
 void exec_server(std::vector<Server>& server_list);
-std::string get_html(std::string request_msg);
+std::string get_html(std::string request_msg, Server *server);
 
 #endif

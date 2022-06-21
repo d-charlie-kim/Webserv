@@ -4,6 +4,8 @@
 #include <string>
 #include "Server.hpp"
 
+struct Server;
+
 struct Client
 {
 	Server *server;
