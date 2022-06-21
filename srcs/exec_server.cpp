@@ -8,7 +8,38 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <fstream>
+#include <sstream>
 #include <map>
+
+std::string ft_itoa(int len)
+{
+    std::string result;
+
+    while (len)
+    {
+        result += len % 10 + '0';
+        len /= 10;
+    }
+    std::reverse(result.begin(), result.end());
+    return (result);
+}
+
+void get_one(std::string& respond_msg)
+{
+    std::fstream fs("/Users/saoh/work_dir/Webserv/html_file/index.html");
+    fs.seekg (0, fs.end);
+    int length = fs.tellg();
+    fs.seekg (0, fs.beg);
+    char buf[length + 1];
+
+    respond_msg = "HTTP/1.1 200 OK\n"
+                  "Content-length: ";
+    respond_msg += ft_itoa(length) + "\n\n";
+    fs.read(buf, length);
+    buf[length] = 0;
+    respond_msg += buf;
+}
 
 static int set_server(Server& server, int& reuse)
 {
@@ -64,56 +95,106 @@ static void disconnect_client(int client_fd, std::map<int, Client>& clients)
     clients.erase(client_fd);
 }
 
-static void event_error(int event_fd, std::map<int, Server> servers, std::map<int, Client>& clients)
+static void event_error(int error_fd, std::map<int, Server> servers, std::map<int, Client>& clients)
 {
-    if (servers.find(event_fd) != servers.end())
-        throw std::runtime_error("server_socket error\n");
+    if (servers.find(error_fd) != servers.end())
+    {
+        Server* tmp_server = &servers[error_fd];
+        int reuse = 1;
+        std::cerr << "server socket error" << std::endl;
+        close(error_fd);
+        servers.erase(error_fd);
+        std::cerr << "server socket reopen" << std::endl;
+        servers.insert(std::make_pair(set_server(*tmp_server, reuse), *tmp_server));
+    }
     else
     {
         std::cerr << "client socket error" << std::endl;
-        disconnect_client(event_fd, clients);
+        disconnect_client(error_fd, clients);
     }
 }
 
-static void write_data_to_client(int client_fd, std::map<int, Client>& clients)
+static void write_data_to_client(int client_fd, std::vector<struct kevent>& change_list, std::map<int, Client>& clients)
 {
     std::map<int, Client>::iterator it = clients.find(client_fd);
     if (it != clients.end())
     {
-        clients[client_fd].respond_msg = get_html(clients[client_fd].request_msg);
+        get_one(clients[client_fd].respond_msg);
         if (clients[client_fd].respond_msg != "")
         {
             int n;
             if ((n = write(client_fd, clients[client_fd].respond_msg.c_str(),
-                    clients[client_fd].respond_msg.size()) == -1))
+                    clients[client_fd].respond_msg.size()) <= 0))
             {
-                std::cerr << "client write error!" << std::endl;
-                disconnect_client(client_fd, clients);  
+                if (n < 0)
+                    std::cerr << "client write error!" << std::endl;
+                disconnect_client(client_fd, clients);
             }
             else
             {
-                clients[client_fd].respond_msg.clear();
+                std::cout << "client " << client_fd << " write data"<< std::endl;
                 clients[client_fd].request_msg.clear();
+                clients[client_fd].respond_msg.clear();
+                if (clients[client_fd].keep)
+                    change_events(change_list, client_fd, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
+                else
+                    disconnect_client(client_fd, clients);
             }
         }
     }
 }
 
-static void read_data_from_client(int client_fd, std::map<int, Client>& clients)
+static void read_data_from_client(struct kevent* curr_event, std::map<int, Client>& clients)
 {
-    char buf[1024];
-    int n = read(client_fd, buf, sizeof(buf));
+    if (curr_event->data == 0) // read event 가 계속 발생 (keep-alive 로 열어뒀을때)
+        return ;
+    char buf[curr_event->data + 1];
+
+
+    int n = read(curr_event->ident, buf, curr_event->data);
     if (n <= 0)
     {
         if (n < 0)
             std::cerr << "client read error!" << std::endl;
-        disconnect_client(client_fd, clients);
+        disconnect_client(curr_event->ident, clients);
     }
     else
     {
-        buf[n] = '\0';
-        clients[client_fd].request_msg += buf;
-        std::cout << "received data from " << client_fd << ": " << clients[client_fd].request_msg << std::endl;
+        buf[n] = 0;
+        std::cout << "client " << curr_event->ident << " read data"<< std::endl;
+        clients[curr_event->ident].request_msg += buf;
+    }
+}
+
+static void parsing_request_msg(Client& client, std::vector<struct kevent>& change_list, int client_fd)
+{
+    if (client.request_msg == "")
+        return ;
+    size_t bound = client.request_msg.find("\r\n\r\n");
+    std::string header = client.request_msg.substr(0, bound);
+    std::string body = client.request_msg.substr(bound + 4);
+    std::istringstream iss_header(header);
+    std::string tmp;
+
+    change_events(change_list, client_fd, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
+    while (1)
+    {
+        iss_header >> tmp;
+        if (iss_header.fail())
+            break ;
+        if (tmp == "Content-Length:")
+        {
+            size_t size;
+            iss_header >> size;
+            if (body.size() < size)
+                change_events(change_list, client_fd, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
+        }
+        if (tmp == "Connection:")
+        {
+            iss_header >> tmp;
+            if (tmp == "close") // keep alive 면 타임체크도 해야 할 듯 하다.
+                client.keep = false;
+        }
     }
 }
 
@@ -121,11 +202,14 @@ static void get_client(int server_fd, std::vector<struct kevent>& change_list, s
 {
     int client_socket;
     if ((client_socket = accept(server_fd, NULL, NULL)) == -1)
-		throw std::runtime_error("accept() error\n" + std::string(strerror(errno)));
-    std::cout << "accept new client: " << client_socket << std::endl;
+    {
+        std::cerr << "client accept error!" << std::endl;
+		return ;
+    }
+    std::cout << "get client : " << client_socket << std::endl;
     fcntl(client_socket, F_SETFL, O_NONBLOCK);
     change_events(change_list, client_socket, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
-    change_events(change_list, client_socket, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
+    change_events(change_list, client_socket, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, NULL);
     clients.insert(std::make_pair(client_socket, Client(&server)));
 }
 
@@ -153,10 +237,13 @@ static void start_server(int& kq, std::map<int, Server>& servers, std::vector<st
                 if (servers.find(curr_event->ident) != servers.end())
                     get_client(curr_event->ident, change_list, clients, servers[curr_event->ident]);
                 else if (clients.find(curr_event->ident)!= clients.end())
-                    read_data_from_client(curr_event->ident, clients);
+                {
+                    read_data_from_client(curr_event, clients);
+                    parsing_request_msg(clients[curr_event->ident], change_list, curr_event->ident);
+                }
             }
             else if (curr_event->filter == EVFILT_WRITE)
-                write_data_to_client(curr_event->ident, clients);
+                write_data_to_client(curr_event->ident, change_list, clients);
         }
     }
 }
