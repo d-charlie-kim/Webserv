@@ -127,8 +127,8 @@ void		Config::m_parse_error_page(std::list<std::string>& line, Location& loc)
 
 	// check valid error_page
 	fs.open(line.back(), std::ios::in);
-	if (!fs.is_open())
-		throw std::invalid_argument("cannot find error_page");
+	//if (!fs.is_open())
+	//	throw std::invalid_argument("cannot find error_page");
 	fs.close();
 	loc.p_error_page.second = line.back();
 	line.pop_back();
