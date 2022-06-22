@@ -80,7 +80,7 @@ static void write_data_to_client(int client_fd, std::map<int, Client>& clients)
     std::map<int, Client>::iterator it = clients.find(client_fd);
     if (it != clients.end())
     {
-        clients[client_fd].respond_msg = get_html(clients[client_fd].request_msg, clients[client_fd].server);
+        get_html(clients[client_fd]);
         if (clients[client_fd].respond_msg != "")
         {
             int n;

@@ -17,6 +17,7 @@ struct Request
 	std::string		connection;
 	int				content_length;
 	std::string		body;
+	int				status_code; // 초기값 0 
 };
 
 class Request_parser
