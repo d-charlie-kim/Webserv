@@ -1,16 +1,9 @@
 #include "../includes/Config.hpp"
 #include "../includes/Client.hpp"
-#include <iostream>
-#include <sys/types.h>
-#include <sys/event.h>
-#include <sys/time.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <fstream>
-#include <sstream>
-#include <map>
+#include "../includes/File.hpp"
+#include "../includes/Connect.hpp"
+
+
 
 std::string ft_itoa(int len)
 {
@@ -95,88 +88,86 @@ static void disconnect_client(int client_fd, std::map<int, Client>& clients)
     clients.erase(client_fd);
 }
 
-static void event_error(int error_fd, std::map<int, Server> servers, std::map<int, Client>& clients)
+static void event_error(Connect& cn)
 {
-    if (servers.find(error_fd) != servers.end())
+    if (cn.servers.find(cn.curr_event->ident) != cn.servers.end())
     {
-        Server* tmp_server = &servers[error_fd];
+        Server* tmp_server = &(cn.servers[cn.curr_event->ident]);
         int reuse = 1;
         std::cerr << "server socket error" << std::endl;
-        close(error_fd);
-        servers.erase(error_fd);
+        close(cn.curr_event->ident);
+        cn.servers.erase(cn.curr_event->ident);
         std::cerr << "server socket reopen" << std::endl;
-        servers.insert(std::make_pair(set_server(*tmp_server, reuse), *tmp_server));
+        cn.servers.insert(std::make_pair(set_server(*tmp_server, reuse), *tmp_server));
     }
     else
     {
         std::cerr << "client socket error" << std::endl;
-        disconnect_client(error_fd, clients);
+        disconnect_client(cn.curr_event->ident, cn.clients);
     }
 }
 
-static void write_data_to_client(int client_fd, std::vector<struct kevent>& change_list, std::map<int, Client>& clients)
+static void write_data_to_client(Connect& cn)
 {
-    std::map<int, Client>::iterator it = clients.find(client_fd);
-    if (it != clients.end())
+    get_one(cn.clients[cn.curr_event->ident].respond_msg);
+    if (cn.clients[cn.curr_event->ident].respond_msg != "")
     {
-        get_one(clients[client_fd].respond_msg);
-        if (clients[client_fd].respond_msg != "")
+        int n;
+        if ((n = write(cn.curr_event->ident, cn.clients[cn.curr_event->ident].respond_msg.c_str(),
+                cn.clients[cn.curr_event->ident].respond_msg.size()) <= 0))
         {
-            int n;
-            if ((n = write(client_fd, clients[client_fd].respond_msg.c_str(),
-                    clients[client_fd].respond_msg.size()) <= 0))
+            if (n < 0)
+                std::cerr << "client write error!" << std::endl;
+            disconnect_client(cn.curr_event->ident, cn.clients);
+        }
+        else
+        {
+            std::cout << "client " << cn.curr_event->ident << " write data"<< std::endl;
+            cn.clients[cn.curr_event->ident].request_msg.clear();
+            cn.clients[cn.curr_event->ident].respond_msg.clear();
+            cn.clients[cn.curr_event->ident].tmp_buffer.clear();
+            if (cn.clients[cn.curr_event->ident].keep)
             {
-                if (n < 0)
-                    std::cerr << "client write error!" << std::endl;
-                disconnect_client(client_fd, clients);
+                // change_events(change_list, client_fd, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
             }
             else
-            {
-                std::cout << "client " << client_fd << " write data"<< std::endl;
-                clients[client_fd].request_msg.clear();
-                clients[client_fd].respond_msg.clear();
-                if (clients[client_fd].keep)
-                    change_events(change_list, client_fd, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
-                else
-                    disconnect_client(client_fd, clients);
-            }
+                disconnect_client(cn.curr_event->ident, cn.clients);
         }
     }
 }
 
-static void read_data_from_client(struct kevent* curr_event, std::map<int, Client>& clients)
+static void read_data_from_client(Connect& cn)
 {
-    if (curr_event->data == 0) // read event 가 계속 발생 (keep-alive 로 열어뒀을때)
+    if (cn.curr_event->data == 0) // read event 가 계속 발생 (keep-alive 로 열어뒀을때)
         return ;
-    char buf[curr_event->data + 1];
+    char buf[cn.curr_event->data + 1];
 
 
-    int n = read(curr_event->ident, buf, curr_event->data);
+    int n = read(cn.curr_event->ident, buf, cn.curr_event->data);
     if (n <= 0)
     {
         if (n < 0)
             std::cerr << "client read error!" << std::endl;
-        disconnect_client(curr_event->ident, clients);
+        disconnect_client(cn.curr_event->ident, cn.clients);
     }
     else
     {
         buf[n] = 0;
-        std::cout << "client " << curr_event->ident << " read data"<< std::endl;
-        clients[curr_event->ident].request_msg += buf;
+        std::cout << "client " << cn.curr_event->ident << " read data"<< std::endl;
+        cn.clients[cn.curr_event->ident].request_msg += buf;
     }
 }
 
-static void parsing_request_msg(Client& client, std::vector<struct kevent>& change_list, int client_fd)
+static void parsing_request_msg(Connect& cn)
 {
-    if (client.request_msg == "")
+    if (cn.clients[cn.curr_event->ident].request_msg == "")
         return ;
-    size_t bound = client.request_msg.find("\r\n\r\n");
-    std::string header = client.request_msg.substr(0, bound);
-    std::string body = client.request_msg.substr(bound + 4);
+    size_t bound = cn.clients[cn.curr_event->ident].request_msg.find("\r\n\r\n");
+    std::string header = cn.clients[cn.curr_event->ident].request_msg.substr(0, bound);
+    std::string body = cn.clients[cn.curr_event->ident].request_msg.substr(bound + 4);
     std::istringstream iss_header(header);
     std::string tmp;
 
-    change_events(change_list, client_fd, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
     while (1)
     {
         iss_header >> tmp;
@@ -187,74 +178,115 @@ static void parsing_request_msg(Client& client, std::vector<struct kevent>& chan
             size_t size;
             iss_header >> size;
             if (body.size() < size)
-                change_events(change_list, client_fd, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
+            {
+                // change_events(cn.change_list, client_fd, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
+            }
         }
         if (tmp == "Connection:")
         {
             iss_header >> tmp;
             if (tmp == "close") // keep alive 면 타임체크도 해야 할 듯 하다.
-                client.keep = false;
+                cn.clients[cn.curr_event->ident].keep = false;
         }
     }
 }
 
-static void get_client(int server_fd, std::vector<struct kevent>& change_list, std::map<int, Client>& clients, Server& server)
+static void file_and_pipe_read(Connect& cn)
+{
+    // read(cn.curr_event->ident, buf, buf_size);
+    // cn.clients[cn.clients[cn.curr_event->ident].origin_fd].tmp_buffer += buf;
+    // cn.clients[cn.clients[cn.curr_event->ident].origin.fd]._state = SET_RESOURCE;
+    std::cerr << "file and pipe read" << std::endl;
+    disconnect_client(cn.curr_event->ident, cn.clients);
+}
+
+static void file_and_pipe_write(Connect& cn)
+{
+    // std::string& tmp = cn.clients[cn.clients[cn.curr_event->ident].origin_fd].tmp_buffer;
+    // write(cn.curr_event->ident, tmp.c_str(), tmp.size());
+    // if (cn.clients[cn.curr_event->ident]._state != CGI_WRITE)
+    //      cn.clients[cn.clients[cn.curr_event->ident].origin.fd]._state = SET_RESOURCE;
+    std::cerr << "file and pipe write" << std::endl;
+    disconnect_client(cn.curr_event->ident, cn.clients);
+}
+
+static void get_client(Connect& cn)
 {
     int client_socket;
-    if ((client_socket = accept(server_fd, NULL, NULL)) == -1)
+    if ((client_socket = accept(cn.curr_event->ident, NULL, NULL)) == -1)
     {
         std::cerr << "client accept error!" << std::endl;
 		return ;
     }
     std::cout << "get client : " << client_socket << std::endl;
     fcntl(client_socket, F_SETFL, O_NONBLOCK);
-    change_events(change_list, client_socket, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
-    change_events(change_list, client_socket, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, NULL);
-    clients.insert(std::make_pair(client_socket, Client(&server)));
+    change_events(cn.change_list, client_socket, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
+    change_events(cn.change_list, client_socket, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
+    cn.clients.insert(std::make_pair(client_socket, Client(&(cn.servers[cn.curr_event->ident]))));
 }
 
-static void start_server(int& kq, std::map<int, Server>& servers, std::vector<struct kevent>& change_list)
+static void start_server(int& kq, Connect& cn)
 {
-    std::map<int, Client> clients;
     struct kevent event_list[8];
     int new_events;
-    struct kevent* curr_event;
 
     std::cout << "echo server started" << std::endl;
 	while (1)
     {
-        new_events = kevent(kq, &change_list[0], change_list.size(), event_list, 8, NULL);
+        new_events = kevent(kq, &(cn.change_list[0]), cn.change_list.size(), event_list, 8, NULL);
         if (new_events == -1)
 			throw std::runtime_error("kevent() error\n" + std::string(strerror(errno)));
-        change_list.clear();
+        cn.change_list.clear();
         for (int i = 0; i < new_events; ++i)
         {
-            curr_event = &event_list[i];
-            if (curr_event->flags & EV_ERROR)
-                event_error(curr_event->ident, servers, clients);
-            else if (curr_event->filter == EVFILT_READ)
+            cn.curr_event = &event_list[i];
+            if (cn.curr_event->flags & EV_ERROR)
+                event_error(cn);
+            else if (cn.curr_event->filter == EVFILT_READ)
             {
-                if (servers.find(curr_event->ident) != servers.end())
-                    get_client(curr_event->ident, change_list, clients, servers[curr_event->ident]);
-                else if (clients.find(curr_event->ident)!= clients.end())
+                if (cn.servers.find(cn.curr_event->ident) != cn.servers.end())
+                    get_client(cn);
+                else if (cn.clients.find(cn.curr_event->ident)!= cn.clients.end())
                 {
-                    read_data_from_client(curr_event, clients);
-                    parsing_request_msg(clients[curr_event->ident], change_list, curr_event->ident);
+                    if (cn.clients[cn.curr_event->ident]._stage == WAIT)
+                        continue ;
+                    else if (cn.clients[cn.curr_event->ident]._stage == GET_REQUEST)
+                    {
+                        read_data_from_client(cn);
+                        parsing_request_msg(cn);
+                    }
+                    else if (cn.clients[cn.curr_event->ident]._stage == CGI_READ ||
+                                cn.clients[cn.curr_event->ident]._stage && FILE_READ)
+                        file_and_pipe_read(cn);
                 }
             }
-            else if (curr_event->filter == EVFILT_WRITE)
-                write_data_to_client(curr_event->ident, change_list, clients);
+            else if (cn.curr_event->filter == EVFILT_WRITE)
+            {
+                if (cn.clients.find(cn.curr_event->ident) != cn.clients.end())
+                {
+                    if (cn.clients[cn.curr_event->ident]._stage == WAIT)
+                        continue ;
+                    else if (cn.clients[cn.curr_event->ident]._stage == SET_RESOURCE)
+                    {
+                    }
+                    else if (cn.clients[cn.curr_event->ident]._stage == SEND_RESPONSE)
+                        write_data_to_client(cn);
+                    else if (cn.clients[cn.curr_event->ident]._stage == CGI_WRITE ||
+                                cn.clients[cn.curr_event->ident]._stage && FILE_WRITE)
+                        file_and_pipe_write(cn);
+                }
+            }
         }
     }
 }
 
 void exec_server(std::vector<Server>& server_list)
 {
-	std::map<int, Server> servers = connect_server(server_list);
+    Connect cn;
+    cn.servers = connect_server(server_list);
 	int kq;
     if ((kq = kqueue()) == -1)
 		throw std::runtime_error("kqueue() error\n" + std::string(strerror(errno)));
-    std::vector<struct kevent> change_list;
-    set_events_servers(change_list, servers);
-    start_server(kq, servers, change_list);
+    set_events_servers(cn.change_list, cn.servers);
+    start_server(kq, cn);
 }
