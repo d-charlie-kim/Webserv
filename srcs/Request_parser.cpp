@@ -5,7 +5,7 @@ Request_parser::Request_parser(std::string request_msg)
 	: __request_msg(request_msg) { }
 Request_parser::~Request_parser() { }
 
-static int		parse_method(std::string str, int allowed_methods)
+static int		parse_method(std::string str)
 {
 	int	method = 0;
 
@@ -20,14 +20,7 @@ static int		parse_method(std::string str, int allowed_methods)
 		}
 		bit <<= 1;
 	}
-	if (!method)
-	{
-		std::cout << "ERROR invalid method" << std::endl;
-		// TODO GET POST DELETE 그 어느 메소드와도 일치하지 않았을 때의 에러처리
-	}
-	// 마지막으로 허용된 메소드인지 확인
-
-	return (method & allowed_methods);
+	return (method);
 }
 
 static Location* search_location_in_list(std::string str, std::vector<Location> &list)
@@ -89,7 +82,8 @@ void	Request_parser::split_request_msg()
 	size_t pos = __request_msg.find("\r\n\r\n");
 	if (pos == std::string::npos)
 	{
-		// TODO 헤더 바디 구분 개행이 아예 없는 경우 에러처리
+		// 헤더 바디 구분 개행이 아예 없어서 400 Bad Request
+		__request.status_code = 400;
 		return;
 	}
 	__request.body = __request_msg.substr(pos + 4);
@@ -119,13 +113,15 @@ std::list<std::string> Request_parser::m_next_line()
 
 void	Request_parser::parse_request(Server *server)
 {
-	// body 저장
+	memset(&__request, 0, sizeof(Request));
 	split_request_msg();
+	if (__request.status_code)
+		return ;
 	__l_line = __l_file.front();
 	if (!__l_line.size())
 	{
-		// TODO 첫줄이 빈 줄이면 에러 response 최소 메소드는 들어와야
-		std::cout << "!" << std::endl;
+		// 첫줄이 빈 줄이면 에러 response 최소 메소드는 들어와야 함 400 Bad Request
+		__request.status_code = 400;
 		return ;
 	}
 	// 처음 등장하는 단어(=method) 저장, 로케이션 확정 후 메소드 해석할 예정
@@ -147,20 +143,29 @@ void	Request_parser::parse_request(Server *server)
 	__request.location = location;
 
 	// 본격적인 메소드 해석
-	int method = parse_method(method_str, location->methods);
+	int method = parse_method(method_str);
 	if (!method)
 	{
-		std::cout << "ERROR" << std::endl;
-		// TODO 허용되지 않은 메소드 405
+		// NOTE GET POST DELETE 그 어느 메소드와도 일치하지 않았을 때의 에러처리 -> 405는 아닌거 같아요
+		__request.status_code = 400;
+		return ;
+	}
+	{
+	if (!method & location->methods)
+	{
+		// 405 not allowed method
+		__request.status_code  = 405;
 		return ;
 	}
 	__request.method = method;
 
 	// 프로토콜 들어오지 않아도 이상없음
-	// 하지만 들어왔다면 HTTP/1.1과 정확히 일치해야
+	// 하지만 들어왔다면 HTTP/1.1과 정확히 일치해야 아니면 505 HTTP Version Not Supported
+	// NOTE is_valid_version 지우면 어떨까요?? 필요없는 내용같아요
 	if (__l_line.empty() || __l_line.front() == "HTTP/1.1")
 		__request.is_valid_version = true;
-	// TODO 바로 에러 response 전송 가능할 듯
+	else
+		__request.status_code = 505;
 
 	__l_line = m_next_line();
 	while (__l_file.size() > 1)

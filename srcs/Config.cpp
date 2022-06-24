@@ -123,13 +123,12 @@ void		Config::m_parse_error_page(std::list<std::string>& line, Location& loc)
 	if (line.size() < 2)
 		throw std::invalid_argument("invalid config file");
 
-	std::ifstream fs;
-
-	// check valid error_page
-	fs.open(line.back(), std::ios::in);
-	if (!fs.is_open())
-		throw std::invalid_argument("cannot find error_page");
-	fs.close();
+	// NOTE 이거 지워야 하는거 아닌가요?
+	// std::ifstream fs;
+	// fs.open(line.back(), std::ios::in);
+	// if (!fs.is_open())
+	// 	throw std::invalid_argument("cannot find error_page");
+	// fs.close();
 	loc.p_error_page.second = line.back();
 	line.pop_back();
 
