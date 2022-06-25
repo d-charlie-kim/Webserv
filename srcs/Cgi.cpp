@@ -157,7 +157,7 @@ std::string Cgi::m_cgi_exec()
 	c2.stage = CGI_READ;
 	client.insert(std::make_pair(pipe_in[WRITE], c1));
 	client.insert(std::make_pair(pipe_out[READ], c2));
-	mcl._stage = WAIT;
+	client._stage = WAIT;
 	m_delete();
 	return ("200");
 }
