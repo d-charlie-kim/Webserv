@@ -3,6 +3,8 @@
 
 #include "Client.hpp"
 #include "Connect.hpp"
+#include "Config.hpp"
+#include "Request_parser.hpp"
 #include <iostream>
 #include <string>
 #include <map>
@@ -13,8 +15,7 @@ class Cgi
 	private:
 
 	public:
-		int						__cur_client_fd;
-		const Request			__request;
+		const Request&			__request;
 		std::vector<std::string> __v_envlist;
 		char**					__env;
 		char*					__argv[3];
@@ -33,13 +34,13 @@ class Cgi
 		std::string	m_get_cwd();
 		std::string m_get_filepath();
 		std::string	m_get_method(int method);
-		std::string	m_itostr();
 		std::string	m_get_query_string();
 
 		void		m_set_env();
 		void		m_set_argv();
 		std::string	m_cgi_exec();
 
+		std::string	m_itoa(int n);
 		void		m_delete();
 
 #endif

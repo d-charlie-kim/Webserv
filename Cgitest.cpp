@@ -14,10 +14,10 @@ Cgi::Cgi()
 : __v_envlist(std::vector<std::string>(23, ""))
 {
 	m_get_cwd();
-	std::string route = "/cgi-bin";
+	std::string route = "/cgi-bin/test.php";
 	__requested_uri = __cwd + route; // requested uri(before ?)
 	__v_envlist[0] = "CONTENT_LENGTH=50"; //request.content_len
-	__v_envlist[1] = "CONTENT_TYPE=text/html"; //request.content_type
+	__v_envlist[1] = "CONTENT_TYPE=application/x-www-form-urlencoded"; //request.content_type
 	__v_envlist[2] = "GATEWAY_INTERFACE=CGI/1.1"; //cgi 버전
 	__v_envlist[3] = "DOCUMENT_ROOT=" + __cwd; //the directory from which static document are served
 	__v_envlist[4] = "PATH_TRANSLATED=" + __requested_uri; //translated version of the path given by the variable PATH_INFO
@@ -95,6 +95,8 @@ std::string Cgi::m_cgi_exec()
 	m_set_argv();
 	if (pipe(pipe_in) == -1 || pipe(pipe_out) == -1)
 		return ("pipe error"); // error처리하기
+	std::string ss("first=formfist&second=formsecond");
+	write(pipe_in[WRITE], ss.c_str(), ss.size());
 	if ((pid = fork()) == -1)
 		return ("fork error"); //error처리하기
 	else if (pid == 0)

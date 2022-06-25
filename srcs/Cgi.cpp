@@ -11,33 +11,29 @@
 
 Cgi::Cgi() {}
 
-Cgi::Cgi(Connect& connect, Client, const Request& request)
-: __cur_client_fd(cur_client_fd), __request(request),
+Cgi::Cgi(Connect& connect, Client& cur_client, const Request& request)
+: __request(request),
 	__v_envlist(std::vector<std::string>(15, ""))
 {
-	__cwd = m_get_cwd(); // 현재 작업 경로
-	__filepath = m_get_filepath(); // requested uri(before '?')
-	__requested_uri = __cwd + __filepath; // full requested uri
+	__cwd = m_get_cwd();
+	__filepath = m_get_filepath();
+	__requested_uri = __cwd + __filepath;
 	__query_string = m_get_query_string();
 	__v_envlist[0] = "REQUEST_METHOD=" + m_get_method(__request.method);
-	__v_envlist[1] = "CONTENT_LENGTH=" + m_itostr(); //request.content_len, 0일땐 없는경우니 ""넣어주기
-	
-	__v_envlist[2] = "CONTENT_TYPE=" + ; //request헤더 content_type
-	__v_envlist[3] = "GATEWAY_INTERFACE=CGI/1.1"; //cgi 버전
+	__v_envlist[1] = "CONTENT_LENGTH=" + m_itoa(__request.content_length);
+	__v_envlist[2] = "CONTENT_TYPE=" +  ; //request헤더 content_type 추가하기
+	__v_envlist[3] = "GATEWAY_INTERFACE=CGI/1.1";
 	__v_envlist[4] = "DOCUMENT_ROOT=" + __cwd;
-	__v_envlist[5] = "PATH_TRANSLATED=" + __requested_uri; //translated version of the path given by the variable PATH_INFO
-	__v_envlist[6] = "QUERY_STRING=" + __query_string; //the data following "?"
-	__v_envlist[7] = "SCRIPT_NAME=" + __filepath; //request.uri
-	
-	__v_envlist[8] = "SERVER_NAME=" + ; //server's hostname or IP addr //connect.cur_event.ident
-	
-	__v_envlist[9] = "SERVER_PORT=" + ; //host port
-	__v_envlist[10] = "SERVER_PROTOCOL==HTTP/1.1"; //고려해야하는가?? 
-	
-	__v_envlist[11] = "SERVER_SOFTWARE=dimteamwebserv"; //서블릿이 실행중인 서블릿 컨테이너의 이름과 버전, 네이밍필요
-	__v_envlist[12] = "REQUEST_URI=" + __requested_uri; // (=PATH_INFO)
-	__v_envlist[13] = "PATH_INFO=" __requested_uri ; //(=PATH_TRANSLATED) 
-	__v_envlist[14] = "SCRIPT_FILENAME=" + __requested_uri ; //=path+ request.uri 
+	__v_envlist[5] = "PATH_TRANSLATED=" + __requested_uri;
+	__v_envlist[6] = "QUERY_STRING=" + __query_string;
+	__v_envlist[7] = "SCRIPT_NAME=" + __filepath;
+	__v_envlist[8] = "SERVER_NAME=" + client.server.listen.first;
+	__v_envlist[9] = "SERVER_PORT=" + m_itoa(client.server.listen.second);
+	__v_envlist[10] = "SERVER_PROTOCOL==HTTP/1.1";
+	__v_envlist[11] = "SERVER_SOFTWARE=dimteamwebserv";
+	__v_envlist[12] = "REQUEST_URI=" + __requested_uri;
+	__v_envlist[13] = "PATH_INFO=" + __requested_uri ;
+	__v_envlist[14] = "SCRIPT_FILENAME=" + __requested_uri ; 
 }
 
 Cgi::~Cgi() {}
@@ -51,12 +47,16 @@ std::string	Cgi::m_get_cwd()
 
 std::string Cgi::m_get_filepath()
 {
-	return (__request.url.substr(0, __request.url.find('?')));
+	if (m_get_method(__request.method) == "POST")
+		return (__request.url);
+	return (__request.url.substr(0, __request.url.find_last_of('?')));
 }
 
 std::string Cgi::m_get_query_string()
 {
-	return (__request.url.substr(__request.url.find('?') + 1));
+	if (m_get_method(__request.method) == "POST")
+		return ("");
+	return (__request.url.substr(__request.url.find_last_of('?') + 1));
 }
 
 std::string	Cgi::m_get_method(int method)
@@ -72,16 +72,19 @@ std::string	Cgi::m_get_method(int method)
 	}
 }
 
-std::string	Cgi::m_itostr()
+std::string	Cgi::m_itoa(int n)
 {
-	// std::stringstream	ss;
-	// std::string			ret;
+	std::string result;
 
-	// if (__request.content_length == 0)
-	// 	return ("");
-	// ss << __request.content_length;
-	// ss >> ret;
-	// return (ret);
+	if (n == 0)
+		return ("");
+	while (n)
+	{
+		result += n % 10 + '0';
+		n /= 10;
+	}
+	std::reverse(result.begin(), result.end());
+	return (result);
 }
 
 void	Cgi::m_set_env()
@@ -92,7 +95,7 @@ void	Cgi::m_set_env()
 		__env[i] = new char[__v_envlist[i].size()];
 		strcpy(__env[i], __v_envlist[i].c_str());
 	}
-	__env[__v_envlist.size()] = NULL;
+	__env[__v_envlist.size()] = nullptr;
 }
 
 void	Cgi::m_set_argv()
@@ -102,7 +105,7 @@ void	Cgi::m_set_argv()
 	strcpy(__argv[0], cgi_path	.c_str());
 	__argv[1] = new char[__requested_uri.size()];
 	strcpy(__argv[1], __requested_uri.c_str());
-	__argv[2] = NULL;
+	__argv[2] = nullptr;
 }
 
 void	Cgi::m_delete()
@@ -127,36 +130,34 @@ std::string Cgi::m_cgi_exec()
 	if ((pid = fork()) == -1)
 		return ("500");
 	else if (pid == 0)
-	{ // 자식 프로세스
+	{
 		close(pipe_in[WRITE]);
 		close(pipe_out[READ]);
 		dup2(pipe_in[READ], STDIN_FILENO);
 		dup2(pipe_out[WRITE], STDOUT_FILENO);
 		close(pipe_in[READ]);
 		close(pipe_out[WRITE]);
-		execve(__argv[0], __argv, __env); //	php-cgi, ////cgi-bin/test.php
-		write(STDOUT_FILENO, "Status: 500 Internal Server Error\r\n\r\n", 37); // exit(1)과 다른 오류??
+		execve(__argv[0], __argv, __env);
 		exit(1);
 	}
 	close(pipe_in[READ]);
 	close(pipe_out[WRITE]);
-	// close(pipe_in[WRITE]); // ??
+	// 아래 구문을 event처리시 확인(오류시 리턴값 때문), pid 저장 필요??
 	// int status;
-	waitpid(pid, &status, 0);
-	if (WIFEXITED(status) && WEXITSTATUS(status)) //wifexited:0이 아니면 자식 정상종료, wexitstatus:자식 exit반환값
-		return ("500");
+	// waitpid(pid, &status, 0);
+	// if (WIFEXITED(status) && WEXITSTATUS(status)) //wifexited:0이 아니면 자식 정상종료, wexitstatus:자식 exit반환값
+	// 	return ("500");
 	change_events(changs_list, pipe_in[WRITE], EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL); // write가 더이상 필요한가??
 	change_events(change_list, pipe_out[READ], EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
 	Client c1;
 	Client c2;
-	c1.origin_fd = connect.clients[__cur_client_fd]; //현재 클라이언트 socket fd
-	c2.origin_fd = connect.clients[__cur_client_fd]; //현재 클라이언트 socket fd
+	c1.origin_fd = connect.clients[connect.curr_event.ident]; //현재 클라이언트 socket fd
+	c2.origin_fd = connect.clients[connect.curr_event.ident]; //현재 클라이언트 socket fd
 	c1.stage = CGI_WRITE;
 	c2.stage = CGI_READ;
 	client.insert(std::make_pair(pipe_in[WRITE], c1));
 	client.insert(std::make_pair(pipe_out[READ], c2));
 	mcl._stage = WAIT;
-	close(pipe_out[READ]);
 	m_delete();
 	return ("200");
 }
