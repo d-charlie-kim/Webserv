@@ -1,20 +1,54 @@
 #include <map>
 #include <vector>
 #include <fstream>
+#include <dirent.h>
 #include "../includes/Client.hpp"
+#include "../includes/Server.hpp"
 #include "../includes/Response.hpp"
 #include "../includes/Request_parser.hpp"
 
-// NOTE return 리다이렉션 있을 때 처리해주는 부분 어디에 넣을지 생각하기
+// TODO request 파트랑 이어지게 정리하기
+// TODO kqueue 완벽 이해하기
+// TODO CGI 과정 완벽 이해하기
+// TODO 플래그로 auto_index 인지 판단하기.
+/*
+	respond 작성 stage
+*/
+// TODO return 리다이렉션 있을 때 처리해주는 부분 어디에 넣을지 생각하기, return 일때는 kevent를 거치지 않는다!
+
+static std::string make_hyper_link(std::string path)
+{
+	DIR *dir_ptr = NULL;
+	struct dirent *file = NULL;
+	std::string a_tag = "";
+
+	dir_ptr = opendir(path.c_str());
+	if (!dir_ptr)
+	{
+		// error 몇번?
+		// return ?
+	}
+	while(1)
+	{
+		file = readdir(dir_ptr);
+		if (!file)
+			break ;
+		a_tag += "<a href=\"";
+		//a_tag += 현재 디렉토리 주소 + file->d_name;
+		a_tag += "\">";
+		a_tag += file->d_name;
+		a_tag += "<\a>\n";
+	}
+	return a_tag;
+}
 
 static void make_auto_index_page(Request& request, Response& response)
 {
 	std::string	auto_index; // FILE 거쳐서 읽어온 auto_index.html 파일
-	std::string name_dir; // 해당 directory 이름
-	std::string read_dir; // readir 함수 사용해서 읽어온 파일 목록
-
+	std::string name_dir = request.url.substr(request.url.rfind('/')); // 해당 directory 이름
+	std::string read_dir = make_hyper_link(request.location->root + request.url.substr(0, request.url.find('?', 0))); // readir 함수 사용해서 읽어온 파일 목록
 	/*
-		auto_index.html 을 읽어온다. (FILE 거쳐야함)
+		auto_index.html 을 읽어온다. (event 거쳐야함)
 	*/
 	response.body = "";
 	std::size_t index = 0;
@@ -119,7 +153,7 @@ static std::string set_response(Connect cn, Request request, Response& response)
 {
 	response.header = "HTTP/1.1 ";
 	response.header += ft_itoa(code);
-	response.header += status_code[code].first; // status_code 는 connect 클래스에 있을 예정
+	response.header += status_code[code].first; // status_code 는 connect 안의 client에 있을 예정
 	response.file_path = status_code[code].second;
 	for (std::vector<int>::iterator iter = request.location->p_error_page.first.begin(); iter != request.location->p_error_page.first.end(); iter++)
 	{
@@ -128,6 +162,7 @@ static std::string set_response(Connect cn, Request request, Response& response)
 	}
 }
 
+//FIXME 인자들 정리
 void response(Connect& cn, Client& client, Request& request)
 {
 	Response	response;
@@ -140,28 +175,4 @@ void response(Connect& cn, Client& client, Request& request)
 	client.respond_msg = response.header + "\r\n" + response.body;
 	// flag = true; // 다시 true로 바꿔줌
 }
-
-/*
-	status_cod 가 400대의 에러 코드일 경우
-	해당 에러페이지 path 를 받아오는데,
-
-	conf파일 내에서
-	location 마다 번호와 해당 번호일때 띄울 에러페이지를 지정해주기 때문에 이를 수정해주는 부분이 필요하다.
-
-	0. map과 map을 섞어서 status_code를 만든다.
-	std::map<int, std::pairi<std::string, std::string> >
-	status code 숫자를 넣으면
-	첫번째 string은 헤더에 붙을 숫자 다음의 string이고,  (200 OK 의 OK 부분)
-	두번재 string은 해당 코드에서 읽어올 file_path 
-
-	// 1. 각 location 마다 map과 pair로 만들어진 저거를 들고 있다가
-	// 파싱할때 file_path를 수정해준다.
-	// 	405 일때 map의 second string에 404path 를 넣어주는 방식
-
-	2. status_code map은 server에서 일괄 관리하고
-	response 작성하는 단계에서 수정해준다.
-		iterator로 location 의 error_page 를 돌면서 일치하는 숫자가 나오면 error_page의 second string을 file_path에 넣어주는 방식
-
-	2번 방식 채택
-*/
 
