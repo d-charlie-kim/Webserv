@@ -5,6 +5,8 @@
 #include <vector>
 #include <list>
 #include <stack>
+#include <map>
+#include <fstream>
 #include "../includes/Server.hpp"
 
 class Config
@@ -40,5 +42,7 @@ class Config
 		void					parse_file();
 		std::vector<Server>&	get_server_list();
 };
+
+void set_html_file(std::map<int, std::pair<std::string, std::string> >& status_code);
 
 #endif

@@ -3,6 +3,8 @@
 
 #include <string>
 #include "Server.hpp"
+#include "Request_parser.hpp"
+#include "Response.hpp"
 
 enum Stage
 {
@@ -25,6 +27,8 @@ struct Client
     int origin_fd;
     Stage _stage;
 	Server *server;
+	Request rq;
+	Response rs;
     std::string request_msg;
     std::string respond_msg;
     std::string tmp_buffer;
