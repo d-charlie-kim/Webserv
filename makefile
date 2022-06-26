@@ -1,9 +1,8 @@
 NAME		=	webserv
 CXX			=	c++
-CXXFLAGS	=	-Wall -Wextra -Werror -std=c++98
-HEADER		=	includes
-
-SRCDIR	=	srcs/
+CXXFLAGS	=	-I$(INCDIR) -Wall -Wextra -Werror -std=c++98
+INCDIR		=	includes
+SRCDIR		=	srcs/
 
 SRC		=	Config.cpp\
 			exec_server.cpp\
@@ -13,7 +12,6 @@ SRC		=	Config.cpp\
 			Response.cpp\
 			set_html_file.cpp\
 			utils.cpp\
-
 
 SRCS	=	$(addprefix $(SRCDIR), $(SRC))
 
