@@ -4,18 +4,22 @@
 #include <fstream>
 #include <sstream>
 #include <list>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include "Server.hpp"
 
 struct Request
 {
-	int				method;
-	std::string		url;
+	int				method;	
+	std::string		url; // original whole string
+	std::string		path; // url without query
 	Location		*location;
-	bool			is_valid_version;
 	bool			is_cgi;
 	bool			is_directory;
 	std::string		connection;
 	int				content_length;
+	std::string		content_type;
 	std::string		body;
 	int				status_code; // 초기값 0 
 };

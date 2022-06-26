@@ -40,17 +40,6 @@ static Location* search_location_in_list(std::string str, std::vector<Location> 
 
 Location* Request_parser::search_location(std::string str, std::vector<Location> &list)
 {
-	// 쿼리스트링 무시
-	str = str.substr(0, str.find("?"));
-
-	// 파일 확장자 확인 및 디렉토리 여부 저장
-	size_t		pos = str.rfind(".");
-	std::string	extension;
-	if (pos == std::string::npos)
-		__request.is_directory = true;
-	else
-		extension = str.substr(str.find("."));
-
 	// 로케이션 완전일치 확인
 	Location *location = search_location_in_list(str, list);
 	// 최상위 루트까지 상위 디렉토리 하나씩 일치 확인
@@ -61,7 +50,7 @@ Location* Request_parser::search_location(std::string str, std::vector<Location>
 	}
 
 	// cgi 확인
-	if (location->cgi.size() && extension == location->cgi)
+	if (location->cgi.size() && str.substr(str.find('.')) == location->cgi)
 		__request.is_cgi = true;
 	return location;
 }
@@ -132,21 +121,30 @@ void	Request_parser::parse_request(Server *server)
 	// url 입력값 없어도 괜찮도록 디폴트 로케이션 설정
 	Location	*location = &(server->default_location);
 	__request.url = "/";
+	__request.path = "/";
 
 	if (__l_line.size())
 	{
-		// set location & url
+		// set location & url & path
 		__request.url = __l_line.front();
-		location = search_location(__l_line.front(), server->location);
+		__request.path = __request.url.substr(__request.url.find('?'));
+		location = search_location(__request.path, server->location);
+		__l_line.pop_front();	
 	}
-	__l_line.pop_front();
 	__request.location = location;
 
+	// 디렉토리 여부 확인 
+	//NOTE ISDIR 매크로로 디렉토리 or 디렉토리가 아님을 저장할지
+	//ISREG 매크로로 일반 파일 or 일반파일이 아님을 저장할지
+	struct stat		status;
+	stat(__request.path.c_str(), &status);
+	if (S_ISDIR(status.st_mode))
+		__request.is_directory = true;
+	
 	// 본격적인 메소드 해석
 	int method = parse_method(method_str);
 	if (!method)
 	{
-		// NOTE GET POST DELETE 그 어느 메소드와도 일치하지 않았을 때의 에러처리 -> 405는 아닌거 같아요
 		__request.status_code = 400;
 		return ;
 	}
@@ -161,22 +159,33 @@ void	Request_parser::parse_request(Server *server)
 
 	// 프로토콜 들어오지 않아도 이상없음
 	// 하지만 들어왔다면 HTTP/1.1과 정확히 일치해야 아니면 505 HTTP Version Not Supported
-	// NOTE is_valid_version 지우면 어떨까요?? 필요없는 내용같아요
-	if (__l_line.empty() || __l_line.front() == "HTTP/1.1")
-		__request.is_valid_version = true;
-	else
+	if (!__l_line.empty() && __l_line.front() == "HTTP/1.1")
 		__request.status_code = 505;
 
+	// post 메소드라면 반드시 content-length 헤더를 가져야 함
+	bool post_must_have_content_length = !(__request.method & POST);
+	// post 메소드가 아니면 항상 true
+
+	
 	__l_line = m_next_line();
 	while (__l_file.size() > 1)
 	{
 		__l_line = m_next_line();
 		if (__l_line.front() == "Content-Length:" && __l_line.size() == 2)
+		{
+			post_must_have_content_length = true;
+			// GET 일때 Content-Length가 들어와도 nginx 200 확인함
 			__request.content_length = std::atoi(__l_line.back().c_str());
+			// TODO  if(__request.content_length < __request.body.size()) 더 읽도록 추가해야
+		}
 		if (__l_line.front() == "Connection:" && __l_line.size() == 2)
 			__request.connection = __l_line.back();
+		if (__l_line.front() == "Content-Type:" && __l_line.size() == 2)
+			__request.content_type = __l_line.back();
 	}
 
+	if (!post_must_have_content_length)
+		__request.status_code = 411;
 }
 
 Request		Request_parser::get_request() const { return __request; }

@@ -123,7 +123,7 @@ void		Config::m_parse_error_page(std::list<std::string>& line, Location& loc)
 	if (line.size() < 2)
 		throw std::invalid_argument("invalid config file");
 
-	// NOTE 이거 지워야 하는거 아닌가요?
+	// NOTE 지워도 되는 부분이지만 일단 주석
 	// std::ifstream fs;
 	// fs.open(line.back(), std::ios::in);
 	// if (!fs.is_open())
