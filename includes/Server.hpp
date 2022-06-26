@@ -2,8 +2,14 @@
 #define	SERVER_HPP
 
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <stack>
+
+#define GET 0x01
+#define POST 0x02
+#define DELETE 0x04 
+
 
 struct Location
 {

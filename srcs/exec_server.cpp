@@ -1,38 +1,8 @@
 #include "../includes/Config.hpp"
 #include "../includes/Client.hpp"
-#include "../includes/File.hpp"
 #include "../includes/Connect.hpp"
+#include "../includes/utils.hpp"
 
-
-
-std::string ft_itoa(int len)
-{
-    std::string result;
-
-    while (len)
-    {
-        result += len % 10 + '0';
-        len /= 10;
-    }
-    std::reverse(result.begin(), result.end());
-    return (result);
-}
-
-void get_one(std::string& respond_msg)
-{
-    std::fstream fs("/Users/saoh/work_dir/Webserv/html_file/index.html");
-    fs.seekg (0, fs.end);
-    int length = fs.tellg();
-    fs.seekg (0, fs.beg);
-    char buf[length + 1];
-
-    respond_msg = "HTTP/1.1 200 OK\n"
-                  "Content-length: ";
-    respond_msg += ft_itoa(length) + "\n\n";
-    fs.read(buf, length);
-    buf[length] = 0;
-    respond_msg += buf;
-}
 
 static int set_server(Server& server, int& reuse)
 {
@@ -109,7 +79,6 @@ static void event_error(Connect& cn)
 
 static void write_data_to_client(Connect& cn)
 {
-    get_one(cn.clients[cn.curr_event->ident].respond_msg);
     if (cn.clients[cn.curr_event->ident].respond_msg != "")
     {
         int n;
@@ -155,39 +124,6 @@ static void read_data_from_client(Connect& cn)
         buf[n] = 0;
         std::cout << "client " << cn.curr_event->ident << " read data"<< std::endl;
         cn.clients[cn.curr_event->ident].request_msg += buf;
-    }
-}
-
-static void parsing_request_msg(Connect& cn)
-{
-    if (cn.clients[cn.curr_event->ident].request_msg == "")
-        return ;
-    size_t bound = cn.clients[cn.curr_event->ident].request_msg.find("\r\n\r\n");
-    std::string header = cn.clients[cn.curr_event->ident].request_msg.substr(0, bound);
-    std::string body = cn.clients[cn.curr_event->ident].request_msg.substr(bound + 4);
-    std::istringstream iss_header(header);
-    std::string tmp;
-
-    while (1)
-    {
-        iss_header >> tmp;
-        if (iss_header.fail())
-            break ;
-        if (tmp == "Content-Length:")
-        {
-            size_t size;
-            iss_header >> size;
-            if (body.size() < size)
-            {
-                // change_events(cn.change_list, client_fd, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
-            }
-        }
-        if (tmp == "Connection:")
-        {
-            iss_header >> tmp;
-            if (tmp == "close") // keep alive 면 타임체크도 해야 할 듯 하다.
-                cn.clients[cn.curr_event->ident].keep = false;
-        }
     }
 }
 
@@ -253,10 +189,10 @@ static void start_server(int& kq, Connect& cn)
                     else if (cn.clients[cn.curr_event->ident]._stage == GET_REQUEST)
                     {
                         read_data_from_client(cn);
-                        parsing_request_msg(cn);
+
                     }
                     else if (cn.clients[cn.curr_event->ident]._stage == CGI_READ ||
-                                cn.clients[cn.curr_event->ident]._stage && FILE_READ)
+                                cn.clients[cn.curr_event->ident]._stage == FILE_READ)
                         file_and_pipe_read(cn);
                 }
             }
@@ -268,11 +204,12 @@ static void start_server(int& kq, Connect& cn)
                         continue ;
                     else if (cn.clients[cn.curr_event->ident]._stage == SET_RESOURCE)
                     {
+                        response(cn, cn.clients[cn.curr_event->ident], cn.clients[cn.curr_event->ident].rq);
                     }
                     else if (cn.clients[cn.curr_event->ident]._stage == SEND_RESPONSE)
                         write_data_to_client(cn);
                     else if (cn.clients[cn.curr_event->ident]._stage == CGI_WRITE ||
-                                cn.clients[cn.curr_event->ident]._stage && FILE_WRITE)
+                                cn.clients[cn.curr_event->ident]._stage == FILE_WRITE)
                         file_and_pipe_write(cn);
                 }
             }

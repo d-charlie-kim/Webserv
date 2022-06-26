@@ -1,7 +1,39 @@
-CC = c++
-CFLAGS = -Wall -Wextra -Werror
-SRCS = srcs/webserv.cpp srcs/Config.cpp srcs/Server.cpp srcs/exec_server.cpp
+NAME		=	webserv
+CXX			=	c++
+CXXFLAGS	=	-Wall -Wextra -Werror -std=c++98
+HEADER		=	includes
 
-all:
-	$(CC) $(CFLAGS) $(SRCS) -o server
-	./server
+SRCDIR	=	srcs/
+
+SRC		=	Config.cpp\
+			exec_server.cpp\
+			Request_parser.cpp\
+			Server.cpp\
+			webserv.cpp\
+			Response.cpp\
+			set_html_file.cpp\
+			utils.cpp\
+
+
+SRCS	=	$(addprefix $(SRCDIR), $(SRC))
+
+OBJS 	=	$(SRCS:.cpp=.o)
+
+$(NAME)	:	$(OBJS)
+		$(CXX) $(CXXFLAGS) $(OBJS) -o $(NAME)
+
+RM 		=	rm -rf
+
+all	:	$(NAME)
+
+clean	:
+		$(RM) $(OBJS)
+
+fclean	:	clean
+		$(RM) $(NAME)
+
+re		:
+		make fclean
+		make all
+
+.PHONY	: all clean fclean re
