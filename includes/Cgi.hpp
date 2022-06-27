@@ -8,9 +8,10 @@
 
 class Cgi
 {
+	public:
+		int						m_cgi_exec();
+
 	private:
-		// Cgi(const Cgi& other);
-		// Cgi& operator=(const Cgi& other);
 		Cgi(Connect& connect, Client& client);
 		~Cgi();
 
@@ -25,7 +26,6 @@ class Cgi
 		std::string				__filepath;
 		std::string				__query_string;
 
-
 		std::string				m_get_cwd();
 		std::string 			m_get_filepath();
 		std::string				m_get_method(int method);
@@ -33,11 +33,9 @@ class Cgi
 
 		void					m_set_env();
 		void					m_set_argv();
-		std::string				m_cgi_exec();
-
 		void					m_delete();
 };
 
-static std::string	itoa(int n);
+static std::string	ft_itoa(int n);
 
 #endif

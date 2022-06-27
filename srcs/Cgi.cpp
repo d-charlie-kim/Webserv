@@ -11,7 +11,7 @@ Cgi::Cgi(Connect& connect, Client& client)
 	__requested_uri = __cwd + __filepath;
 	__query_string = m_get_query_string();
 	__v_envlist[0] = "REQUEST_METHOD=" + m_get_method(__request.method);
-	__v_envlist[1] = "CONTENT_LENGTH=" + itoa(__request.content_length);
+	__v_envlist[1] = "CONTENT_LENGTH=" + ft_itoa(__request.content_length);
 	__v_envlist[2] = "CONTENT_TYPE=" +  __request.content_type; //request헤더 content_type 추가하기
 	__v_envlist[3] = "GATEWAY_INTERFACE=CGI/1.1";
 	__v_envlist[4] = "DOCUMENT_ROOT=" + __cwd;
@@ -19,11 +19,11 @@ Cgi::Cgi(Connect& connect, Client& client)
 	__v_envlist[6] = "QUERY_STRING=" + __query_string;
 	__v_envlist[7] = "SCRIPT_NAME=" + __filepath;
 	__v_envlist[8] = "SERVER_NAME=" + client.server->listen.first;
-	__v_envlist[9] = "SERVER_PORT=" + itoa(client.server->listen.second);
+	__v_envlist[9] = "SERVER_PORT=" + ft_itoa(client.server->listen.second);
 	__v_envlist[10] = "SERVER_PROTOCOL==HTTP/1.1";
 	__v_envlist[11] = "SERVER_SOFTWARE=dimteamwebserv";
 	__v_envlist[12] = "REQUEST_URI=" + __requested_uri;
-	__v_envlist[13] = "PATH_INFO=" + __requested_uri ;
+	__v_envlist[13] = "PATH_INFO=" + __requested_uri;
 	__v_envlist[14] = "SCRIPT_FILENAME=" + __requested_uri; 
 }
 
@@ -108,7 +108,7 @@ void	Cgi::m_delete()
 	delete[] __argv[1];
 }
 
-std::string Cgi::m_cgi_exec()
+int		Cgi::m_cgi_exec()
 {
 	int		pipe_in[2];
 	int 	pipe_out[2];
@@ -117,9 +117,9 @@ std::string Cgi::m_cgi_exec()
 	m_set_env();
 	m_set_argv();
 	if (pipe(pipe_in) == -1 || pipe(pipe_out) == -1)
-		return ("500");
+		return (500);
 	if ((pid = fork()) == -1)
-		return ("500");
+		return (500);
 	else if (pid == 0)
 	{
 		close(pipe_in[WRITE]);
@@ -144,11 +144,12 @@ std::string Cgi::m_cgi_exec()
 	Client c2;
 	c1.origin_fd = __cn.curr_event->ident; //현재 클라이언트 socket fd
 	c2.origin_fd = __cn.curr_event->ident; //현재 클라이언트 socket fd
+	c1.cgi_pid = pid;
 	c1._stage = CGI_WRITE;
 	c2._stage = CGI_READ;
 	__cn.clients.insert(std::make_pair(pipe_in[WRITE], c1));
 	__cn.clients.insert(std::make_pair(pipe_out[READ], c2));
 	__cn.clients[__cn.curr_event->ident]._stage = WAIT;
 	m_delete();
-	return ("200");
+	return (200);
 }
