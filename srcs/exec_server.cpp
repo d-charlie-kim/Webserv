@@ -3,6 +3,14 @@
 #include "Connect.hpp"
 #include "utils.hpp"
 
+#define NC "\033[0m"
+#define BLCK "\033[30m"
+#define RED  "\033[31m"
+#define GREN "\033[32m"
+#define YLLW "\033[33m"
+#define BLUE "\033[34m"
+#define PRPL "\033[35m"
+#define AQUA "\033[36m"
 
 static int set_server(Server& server, int& reuse)
 {
@@ -122,7 +130,7 @@ static void read_data_from_client(Connect& cn)
     {
         buf[n] = 0;
         cn.clients[cn.curr_event->ident].request_msg += buf;
-        std::cout << "client " << cn.curr_event->ident << " msg : " << cn.clients[cn.curr_event->ident].request_msg << std::endl;
+        std::cout << YLLW "client " << cn.curr_event->ident << " msg : " NC << cn.clients[cn.curr_event->ident].request_msg << std::endl;
     }
 }
 
@@ -186,7 +194,7 @@ static void get_client(Connect& cn)
         std::cerr << "client accept error!" << std::endl;
 		return ;
     }
-    std::cout << "get client : " << client_socket << std::endl;
+    std::cout << BLUE "get client : " NC << client_socket << std::endl;
     fcntl(client_socket, F_SETFL, O_NONBLOCK);
     change_events(cn.change_list, client_socket, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
     change_events(cn.change_list, client_socket, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);

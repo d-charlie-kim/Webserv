@@ -49,7 +49,7 @@ static std::string make_hyper_link(Request& request, std::string path)
 		a_tag += file->d_name;
 		a_tag += "\">";
 		a_tag += file->d_name;
-		a_tag += "<\a>\n";
+		a_tag += "</a>\n";
 	}
 	return a_tag;
 }
@@ -225,5 +225,6 @@ void response(Connect& cn, Client& client, Request& request)
 		client.respond_msg += "\r\n\r\n";
 		client.respond_msg += client.rs.body;
 		client._stage = SEND_RESPONSE;
+		client.is_io = false;
 	}
 }
