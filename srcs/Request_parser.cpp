@@ -45,6 +45,7 @@ Location* Request_parser::search_location(std::string str, std::vector<Location>
 	// 최상위 루트까지 상위 디렉토리 하나씩 일치 확인
 	while (!location && str.size() > 1)
 	{
+		// if (str.rfind("/") != std::string::npos)
 		str = str.substr(0, str.rfind("/"));
 		location = search_location_in_list(str, list);
 	}
@@ -100,8 +101,9 @@ std::list<std::string> Request_parser::m_next_line()
 	return (__l_file.front());
 }
 
-void	Request_parser::parse_request(Server *server)
+void	Request_parser::parse_request(Client& client)
 {
+	Server *server = client.server;
 	memset(&request, 0, sizeof(Request));
 	split_request_msg();
 	if (request.status_code)
@@ -149,7 +151,7 @@ void	Request_parser::parse_request(Server *server)
 	if (!(method & location->methods))
 	{
 		// 405 not allowed method
-		request.status_code  = 405;
+		request.status_code = 405;
 		return ;
 	}
 	request.method = method;
@@ -162,6 +164,7 @@ void	Request_parser::parse_request(Server *server)
 	// post 메소드라면 반드시 content-length 헤더를 가져야 함
 	bool post_must_have_content_length = !(request.method & POST);
 	// post 메소드가 아니면 항상 true
+	bool is_enough_body_length = true;
 	
 	__l_line = m_next_line();
 	while (__l_file.size() > 1)
@@ -172,7 +175,14 @@ void	Request_parser::parse_request(Server *server)
 			post_must_have_content_length = true;
 			// GET 일때 Content-Length가 들어와도 nginx 200 확인함
 			request.content_length = std::atoi(__l_line.back().c_str());
-			// TODO  if(request.content_length < request.body.size()) 더 읽도록 추가해야
+			if(request.content_length > static_cast<int>(request.body.size()))
+				is_enough_body_length = false;
+			// if (request.content_length < request.body.size())
+			// {
+			// 	// NOTE 만약 이런 경우가 있으면 저장해뒀다가 다음 메세지로 인식해야 하는 거 아닐까요 일단 보류
+			// 	size_t size_to_remove = request.body.size() - request.content_length;
+			// 	request.body = request.body.substr(0, request.content_length);
+			// }
 		}
 		if (__l_line.front() == "Connection:" && __l_line.size() == 2)
 			request.connection = __l_line.back();
@@ -182,13 +192,22 @@ void	Request_parser::parse_request(Server *server)
 
 	if (!post_must_have_content_length)
 		request.status_code = 411;
+	if(is_enough_body_length)
+		client._stage = SET_RESOURCE;
+			// FLAG처리 이상이 있으면 stage그대로 없으면 변경 3번째거로로 SET_RESOURCE
 }
 
 
 void request_msg_parsing(Client& client)
 {
+	if(client.rq.content_length)
+	{
+		size_t		size_to_copy = client.rq.body.size() - client.rq.content_length;
+		client.rq.body += client.request_msg.substr(0, size_to_copy);
+		client._stage = SET_RESOURCE;
+		return ;
+	}
 	Request_parser		parser(client.request_msg);
-
-	parser.parse_request(client.server);
+	parser.parse_request(client);
 	client.rq = parser.request;
 }

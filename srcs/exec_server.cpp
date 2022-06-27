@@ -189,7 +189,7 @@ static void start_server(int& kq, Connect& cn)
                     else if (cn.clients[cn.curr_event->ident]._stage == GET_REQUEST)
                     {
                         read_data_from_client(cn);
-
+                        request_msg_parsing(cn.clients[cn.curr_event->ident]);
                     }
                     else if (cn.clients[cn.curr_event->ident]._stage == CGI_READ ||
                                 cn.clients[cn.curr_event->ident]._stage == FILE_READ)
