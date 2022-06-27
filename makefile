@@ -16,6 +16,8 @@ $(NAME): $(OBJS)
 	c++ $(CXXFLAGS) -I$(INCDIR) -o $(NAME) $(OBJS)
 
 all: $(NAME)
+	mkdir -p ./www
+	mkdir -p ./cgi-bin/uploads
 
 clean:
 	$(RM) $(OBJS)
@@ -23,5 +25,6 @@ clean:
 fclean: clean
 	$(RM) $(NAME)
 	$(RM) -r www/
+	$(RM) -r cgi-bin/uploads/
 
 re: fclean all

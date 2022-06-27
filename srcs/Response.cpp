@@ -58,7 +58,6 @@ static std::string get_directory_name(Request& request, std::string path)
 
 static void make_auto_index_page(Client& client, Request& request, Response& response)
 {
-	//TODO auto_index는 하드코딩으로 들고온다.
 	std::string	auto_index = "<!DOCTYPE html>\r\n<html lang=\"en\">\r\n<head>\r\n	<style>\r\n		body {\r\n			padding: 30px;\r\n		}\r\n		h1, h2 {\r\n			font-weight: 400;\r\n			margin: 0;\r\n		}\r\n		h1 > span {\r\n			font-weight: 900;\r\n		}\r\n		ul > li {\r\n			font-size: 20px;\r\n		}\r\n	</style>\r\n	<meta charset=\"UTF-8\">\r\n	<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n	<title>Webserv index of $1</title>\r\n</head>\r\n<body>\r\n	<h1>Webserv index of <span>$1</span></h1>\r\n	<hr>\r\n	<ul>\r\n		<pre>$2</pre>\r\n	</ul>\r\n	<hr>\r\n</body>\r\n</html>\r\n";
 	std::string name_dir = get_directory_name(request, request.path); // 해당 directory 이름
 	std::string read_dir = make_hyper_link(request, request.location->root + request.path); // readir 함수 사용해서 읽어온 파일 목록
@@ -157,18 +156,15 @@ static void method_exe(Connect& cn, Request& request, Response& response)
 
 static void set_response(Connect& cn, Request& request, Response& response)
 {
-	std::cout << "11" << std::endl;
 	response.header = "HTTP/1.1 ";
 	response.header += ft_itoa(request.status_code);
-	response.header += cn.first_line[request.status_code].first;
+	response.header += " " + cn.first_line[request.status_code].first;
 	response.file_path = cn.first_line[request.status_code].second;
-	std::cout << "22" << std::endl;
 	for (std::vector<int>::iterator iter = request.location->p_error_page.first.begin(); iter != request.location->p_error_page.first.end(); iter++)
 	{
 		if (*iter == request.status_code)
 			response.file_path = request.location->p_error_page.second;
 	}
-	std::cout << "33" << std::endl;
 }
 
 static void make_redirection(Connect& cn, Client& client)
@@ -186,36 +182,28 @@ void response(Connect& cn, Client& client, Request& request)
         std::cout << "STAGE SET_RESOURCE" << std::endl; 
 	if (!client.is_io)
 	{
-		std::cout << "1" << std::endl;
 		if (!request.status_code)
 		{
-			std::cout << "2" << std::endl;
 			if (request.location->p_return.first)
 			{
 				make_redirection(cn, client);
 				client._stage = SEND_RESPONSE;
 				return ;
 			}
-			std::cout << "3" << std::endl;
 			method_exe(cn, request, client.rs);
-			std::cout << "4" << std::endl;
 		}
 		if (request.is_cgi && !request.status_code)
 		{
-			std::cout << "5" << std::endl;
 			request.is_cgi = false;
 			client.is_io = true;
 			return ;
 		}
 		std::cout << request.location->cgi << std::endl;
-		std::cout << "6" << std::endl;
 		set_response(cn, request, client.rs);
 		client.is_io = true;
-		std::cout << "7" << std::endl;
 	}
 	else if (client.is_io)
 	{
-		std::cout << "8" << std::endl;
 		if (request.is_cgi && request.status_code)
 		{
 			request.is_cgi = false;
@@ -230,7 +218,6 @@ void response(Connect& cn, Client& client, Request& request)
 			client.respond_msg += "Content-Length: " + ft_itoa(client.rs.body.size());
 		client.respond_msg += "\r\n\r\n";
 		client.respond_msg += client.rs.body;
-		std::cout << "9" << std::endl;
 		client._stage = SEND_RESPONSE;
 	}
 }
