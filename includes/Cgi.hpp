@@ -1,20 +1,20 @@
 #ifndef CGI_HPP
 #define CGI_HPP
 
-#include "Client.hpp"
 #include "Connect.hpp"
-#include "Config.hpp"
-#include "Request_parser.hpp"
-#include <iostream>
+#include "Client.hpp"
 #include <string>
-#include <map>
 #include <vector>
 
 class Cgi
 {
-	private:
-
 	public:
+		int						m_cgi_exec();
+		Cgi(Connect& connect, Client& client);
+		~Cgi();
+
+	private:
+		Connect&				__cn;
 		const Request&			__request;
 		std::vector<std::string> __v_envlist;
 		char**					__env;
@@ -25,22 +25,16 @@ class Cgi
 		std::string				__filepath;
 		std::string				__query_string;
 
-		Cgi();
-		Cgi(Connect connect, int cur_client_fd, Request request);
-		// Cgi(const Cgi& other);
-		~Cgi();
-		// Cgi& operator=(const Cgi& other);
+		std::string				m_get_cwd();
+		std::string 			m_get_filepath();
+		std::string				m_get_method(int method);
+		std::string				m_get_query_string();
 
-		std::string	m_get_cwd();
-		std::string m_get_filepath();
-		std::string	m_get_method(int method);
-		std::string	m_get_query_string();
+		void					m_set_env();
+		void					m_set_argv();
+		void					m_delete();
+};
 
-		void		m_set_env();
-		void		m_set_argv();
-		std::string	m_cgi_exec();
-
-		std::string	m_itoa(int n);
-		void		m_delete();
+static std::string	ft_itoa(int n);
 
 #endif
