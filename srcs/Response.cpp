@@ -177,7 +177,7 @@ static void make_redirection(Connect& cn, Client& client)
 	client.respond_msg += ft_itoa(client.rq.location->p_return.first);
 	client.respond_msg += " " + cn.first_line[client.rq.location->p_return.first].first;
 	client.respond_msg += "\r\n";
-	client.respond_msg += "Location: " + client.rq.location->p_return.second;
+	client.respond_msg += "Location: " + client.rq.location->p_return.second + "\r\n\r\n";
 }
 
 void response(Connect& cn, Client& client, Request& request)
