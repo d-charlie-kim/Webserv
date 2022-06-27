@@ -1,5 +1,5 @@
-#include "../includes/Request_parser.hpp"
-#include "../includes/Connect.hpp"
+#include "Request_parser.hpp"
+#include "Connect.hpp"
 
 Request_parser::Request_parser(std::string request_msg)
 	: __request_msg(request_msg) { }
@@ -23,7 +23,7 @@ static int		parse_method(std::string str)
 	return (method);
 }
 
-static Location* search_location_in_list(std::string str, std::vector<Location> &list)
+static Location* search_location_in_list(std::string& str, std::vector<Location> &list)
 {
 	std::vector<Location>::iterator it = list.begin();
 	if (str.empty())
@@ -42,16 +42,16 @@ Location* Request_parser::search_location(std::string str, std::vector<Location>
 {
 	// 로케이션 완전일치 확인
 	Location *location = search_location_in_list(str, list);
-	// 최상위 루트까지 상위 디렉토리 하나씩 일치 확인
-	while (!location && str.size() > 1)
+	// 최상위 루트까지 상위 디렉토리 하나씩 일치 확인	
+	while (!location && str != "/")
 	{
-		// if (str.rfind("/") != std::string::npos)
 		str = str.substr(0, str.rfind("/"));
 		location = search_location_in_list(str, list);
 	}
 
 	// cgi 확인
-	if (location->cgi.size() && str.substr(str.find('.')) == location->cgi)
+	size_t pos = str.find('.');
+	if (location->cgi.size() && pos != std::string::npos && str.substr(pos) == location->cgi)
 		request.is_cgi = true;
 	return location;
 }
@@ -129,7 +129,7 @@ void	Request_parser::parse_request(Client& client)
 	{
 		// set location & url & path
 		request.url = __l_line.front();
-		request.path = request.url.substr(request.url.find('?'));
+		request.path = request.url.substr(0,request.url.find("?"));
 		location = search_location(request.path, server->location);
 		__l_line.pop_front();	
 	}
@@ -159,7 +159,10 @@ void	Request_parser::parse_request(Client& client)
 	// 프로토콜 들어오지 않아도 이상없음
 	// 하지만 들어왔다면 HTTP/1.1과 정확히 일치해야 아니면 505 HTTP Version Not Supported
 	if (!__l_line.empty() && __l_line.front() == "HTTP/1.1")
+	{
 		request.status_code = 505;
+		return ;
+	}
 
 	// post 메소드라면 반드시 content-length 헤더를 가져야 함
 	bool post_must_have_content_length = !(request.method & POST);
@@ -167,6 +170,7 @@ void	Request_parser::parse_request(Client& client)
 	bool is_enough_body_length = true;
 	
 	__l_line = m_next_line();
+
 	while (__l_file.size() > 1)
 	{
 		__l_line = m_next_line();
