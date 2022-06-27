@@ -16,6 +16,9 @@ struct Request
 	std::string		content_type;
 	std::string		body;
 	int				status_code; // 초기값 0 
+
+	Request();
+	Request& operator=(Request& rq);
 };
 
 #endif

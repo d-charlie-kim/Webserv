@@ -155,15 +155,13 @@ void	Request_parser::parse_request(Client& client)
 		return ;
 	}
 	request.method = method;
-
 	// 프로토콜 들어오지 않아도 이상없음
 	// 하지만 들어왔다면 HTTP/1.1과 정확히 일치해야 아니면 505 HTTP Version Not Supported
-	if (!__l_line.empty() && __l_line.front() == "HTTP/1.1")
+	if (!__l_line.empty() && !(__l_line.front() == "HTTP/1.1"))
 	{
 		request.status_code = 505;
 		return ;
 	}
-
 	// post 메소드라면 반드시 content-length 헤더를 가져야 함
 	bool post_must_have_content_length = !(request.method & POST);
 	// post 메소드가 아니면 항상 true
@@ -196,9 +194,8 @@ void	Request_parser::parse_request(Client& client)
 
 	if (!post_must_have_content_length)
 		request.status_code = 411;
-	if(is_enough_body_length)
-		client._stage = SET_RESOURCE;
-			// FLAG처리 이상이 있으면 stage그대로 없으면 변경 3번째거로로 SET_RESOURCE
+	if (is_enough_body_length)
+		client._stage = SET_RESOURCE; // FLAG처리 이상이 있으면 stage그대로 없으면 변경 3번째거로로 SET_RESOURCE
 }
 
 
@@ -209,12 +206,9 @@ void request_msg_parsing(Client& client)
 		size_t		size_to_copy = client.rq.body.size() - client.rq.content_length;
 		client.rq.body += client.request_msg.substr(0, size_to_copy);
 		client._stage = SET_RESOURCE;
-		std::cout << "------1----------" << std::endl;
 		return ;
 	}
 	Request_parser		parser(client.request_msg);
 	parser.parse_request(client);
 	client.rq = parser.request;
-	std::cout << "----------------" << std::endl;
-	std::cout << client.rq.location->cgi << std::endl;
 }

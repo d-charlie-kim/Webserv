@@ -163,11 +163,8 @@ static void set_response(Connect& cn, Request& request, Response& response)
 	response.header += cn.first_line[request.status_code].first;
 	response.file_path = cn.first_line[request.status_code].second;
 	std::cout << "22" << std::endl;
-	if (request.location->p_error_page.first.empty())
-		std::cout << "qls" << std::endl;
 	for (std::vector<int>::iterator iter = request.location->p_error_page.first.begin(); iter != request.location->p_error_page.first.end(); iter++)
 	{
-		std::cout << *iter << std::endl;
 		if (*iter == request.status_code)
 			response.file_path = request.location->p_error_page.second;
 	}
