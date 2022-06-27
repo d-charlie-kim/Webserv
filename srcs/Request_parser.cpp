@@ -134,11 +134,9 @@ void	Request_parser::parse_request(Server *server)
 	request.location = location;
 
 	// 디렉토리 여부 확인 
-	//NOTE ISDIR 매크로로 디렉토리 or 디렉토리가 아님을 저장할지
-	//ISREG 매크로로 일반 파일 or 일반파일이 아님을 저장할지
 	struct stat		status;
 	stat(request.path.c_str(), &status);
-	if (S_ISDIR(status.st_mode))
+	if (!S_ISREG(status.st_mode))
 		request.is_directory = true;
 	
 	// 본격적인 메소드 해석
@@ -164,7 +162,6 @@ void	Request_parser::parse_request(Server *server)
 	// post 메소드라면 반드시 content-length 헤더를 가져야 함
 	bool post_must_have_content_length = !(request.method & POST);
 	// post 메소드가 아니면 항상 true
-
 	
 	__l_line = m_next_line();
 	while (__l_file.size() > 1)
