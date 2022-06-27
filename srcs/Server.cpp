@@ -1,7 +1,5 @@
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include "../includes/Server.hpp"
-#include "../includes/Config.hpp"
+#include "Server.hpp"
+#include "Config.hpp"
 
 Location::Location()
 	: auto_index(false),

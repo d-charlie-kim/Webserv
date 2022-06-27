@@ -37,14 +37,6 @@ static std::map<int, Server> connect_server(std::vector<Server>& server_list)
 	return (servers);
 }
 
-static void change_events(std::vector<struct kevent>& change_list, uintptr_t ident, int16_t filter, uint16_t flags, uint32_t fflags, intptr_t data, void *udata)
-{
-    struct kevent temp_event;
-
-    EV_SET(&temp_event, ident, filter, flags, fflags, data, udata);
-    change_list.push_back(temp_event);
-}
-
 static void set_events_servers(std::vector<struct kevent>& change_list, std::map<int, Server> servers)
 {
 	for (std::map<int, Server>::iterator iter = servers.begin(); iter != servers.end(); iter++)

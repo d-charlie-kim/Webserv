@@ -2,6 +2,7 @@
 #define Request_HPP
 
 #include "Server.hpp"
+
 struct Request
 {
 	int				method;	

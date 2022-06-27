@@ -2,6 +2,10 @@
 #define RESPONSE_HPP
 
 #include <string>
+#include <map>
+#include <vector>
+#include <fstream>
+#include <dirent.h>
 
 struct Response
 {

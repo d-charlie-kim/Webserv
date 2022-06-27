@@ -1,4 +1,4 @@
-#include "../includes/Config.hpp"
+#include "Config.hpp"
 
 static void set_status_code(std::map<int, std::pair<std::string, std::string> >& status_code)
 {

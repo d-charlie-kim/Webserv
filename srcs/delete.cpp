@@ -1,5 +1,4 @@
-
-#include "../includes/Client.hpp"
+#include "Client.hpp"
 
 void	delete_function(Request &request, Client &client)
 {

@@ -1,5 +1,5 @@
-#include "../includes/Request_parser.hpp"
-#include "../includes/Connect.hpp"
+#include "Request_parser.hpp"
+#include "Connect.hpp"
 
 Request_parser::Request_parser(std::string request_msg)
 	: __request_msg(request_msg) { }

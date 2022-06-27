@@ -1,9 +1,4 @@
-
-
-#include <fstream>
-#include <sstream>
-#include <iostream>
-#include "../includes/Client.hpp"
+#include "Client.hpp"
 /*
 	request parsing 과정에서 확인된 status code
 		- 400 Bad request

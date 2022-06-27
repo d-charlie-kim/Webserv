@@ -1,5 +1,6 @@
 #ifndef REQUEST_HPP
 #define REQUEST_HPP
+
 #include <iostream>
 #include <fstream>
 #include <sstream>

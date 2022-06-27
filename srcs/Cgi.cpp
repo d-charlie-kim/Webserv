@@ -1,7 +1,5 @@
 #include "Cgi.hpp"
-
-#define READ 0
-#define WRITE 1
+#include "utils.hpp"
 
 Cgi::Cgi(Connect& connect, Client& client)
 	: __cn(connect), __request(client.rq), __v_envlist(std::vector<std::string>(15, ""))
@@ -61,21 +59,6 @@ std::string	Cgi::m_get_method(int method)
 		default :
 			return ("");
 	}
-}
-
-static std::string	itoa(int n)
-{
-	std::string result;
-
-	if (n == 0)
-		return ("");
-	while (n)
-	{
-		result += n % 10 + '0';
-		n /= 10;
-	}
-	std::reverse(result.begin(), result.end());
-	return (result);
 }
 
 void	Cgi::m_set_env()

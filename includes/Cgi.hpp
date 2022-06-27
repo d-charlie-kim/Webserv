@@ -6,6 +6,9 @@
 #include <string>
 #include <vector>
 
+#define READ 0
+#define WRITE 1
+
 class Cgi
 {
 	public:
@@ -34,7 +37,5 @@ class Cgi
 		void					m_set_argv();
 		void					m_delete();
 };
-
-static std::string	ft_itoa(int n);
 
 #endif
