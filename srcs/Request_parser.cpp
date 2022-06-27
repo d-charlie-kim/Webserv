@@ -209,9 +209,12 @@ void request_msg_parsing(Client& client)
 		size_t		size_to_copy = client.rq.body.size() - client.rq.content_length;
 		client.rq.body += client.request_msg.substr(0, size_to_copy);
 		client._stage = SET_RESOURCE;
+		std::cout << "------1----------" << std::endl;
 		return ;
 	}
 	Request_parser		parser(client.request_msg);
 	parser.parse_request(client);
 	client.rq = parser.request;
+	std::cout << "----------------" << std::endl;
+	std::cout << client.rq.location->cgi << std::endl;
 }

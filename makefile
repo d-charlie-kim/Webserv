@@ -22,6 +22,6 @@ clean:
 
 fclean: clean
 	$(RM) $(NAME)
-	$(RM) www/
+	$(RM) -r www/
 
 re: fclean all

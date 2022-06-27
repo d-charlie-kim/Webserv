@@ -1,8 +1,10 @@
 #include "Client.hpp"
+#include "Cgi.hpp"
 #include "Server.hpp"
 #include "Response.hpp"
 #include "Request.hpp"
 #include "Connect.hpp"
+#include "utils.hpp"
 
 static std::string make_hyper_link(Request& request, std::string path)
 {
@@ -77,7 +79,7 @@ static void make_auto_index_page(Client& client, Request& request, Response& res
 
 	response.header = "HTTP/1.1 200 OK";
 	client.respond_msg = response.header + "\r\n\r\n" + response.body;
-	//STAGE = 3;
+	client._stage = SEND_RESPONSE;
 }
 
 static void method_get(Connect& cn, Request& request, Response& response)
@@ -155,15 +157,21 @@ static void method_exe(Connect& cn, Request& request, Response& response)
 
 static void set_response(Connect& cn, Request& request, Response& response)
 {
+	std::cout << "11" << std::endl;
 	response.header = "HTTP/1.1 ";
 	response.header += ft_itoa(request.status_code);
 	response.header += cn.first_line[request.status_code].first;
 	response.file_path = cn.first_line[request.status_code].second;
+	std::cout << "22" << std::endl;
+	if (request.location->p_error_page.first.empty())
+		std::cout << "qls" << std::endl;
 	for (std::vector<int>::iterator iter = request.location->p_error_page.first.begin(); iter != request.location->p_error_page.first.end(); iter++)
 	{
+		std::cout << *iter << std::endl;
 		if (*iter == request.status_code)
 			response.file_path = request.location->p_error_page.second;
 	}
+	std::cout << "33" << std::endl;
 }
 
 static void make_redirection(Connect& cn, Client& client)
@@ -177,33 +185,44 @@ static void make_redirection(Connect& cn, Client& client)
 
 void response(Connect& cn, Client& client, Request& request)
 {
-	//if (STAGE == 1번)
+	if (cn.clients[cn.curr_event->ident]._stage == SET_RESOURCE)
+        std::cout << "STAGE SET_RESOURCE" << std::endl; 
+	if (!client.is_io)
 	{
+		std::cout << "1" << std::endl;
 		if (!request.status_code)
 		{
+			std::cout << "2" << std::endl;
 			if (request.location->p_return.first)
 			{
 				make_redirection(cn, client);
-				//STAGE = 3번
+				client._stage = SEND_RESPONSE;
 				return ;
 			}
+			std::cout << "3" << std::endl;
 			method_exe(cn, request, client.rs);
+			std::cout << "4" << std::endl;
 		}
 		if (request.is_cgi && !request.status_code)
 		{
+			std::cout << "5" << std::endl;
 			request.is_cgi = false;
-			//STAGE = 2번
+			client.is_io = true;
 			return ;
 		}
+		std::cout << request.location->cgi << std::endl;
+		std::cout << "6" << std::endl;
 		set_response(cn, request, client.rs);
-		//STAGE = 2번
+		client.is_io = true;
+		std::cout << "7" << std::endl;
 	}
-	//else if (STAGE == 2번)
+	else if (client.is_io)
 	{
+		std::cout << "8" << std::endl;
 		if (request.is_cgi && request.status_code)
 		{
 			request.is_cgi = false;
-			//STAGE = 1번
+			client.is_io = false;
 			return ;
 		}
 		else if (request.is_cgi && !request.status_code)
@@ -214,6 +233,7 @@ void response(Connect& cn, Client& client, Request& request)
 			client.respond_msg += "Content-Length: " + ft_itoa(client.rs.body.size());
 		client.respond_msg += "\r\n\r\n";
 		client.respond_msg += client.rs.body;
-		// STAGE = 3번
+		std::cout << "9" << std::endl;
+		client._stage = SEND_RESPONSE;
 	}
 }
