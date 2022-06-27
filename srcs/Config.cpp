@@ -1,9 +1,5 @@
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <unistd.h>
-#include "../includes/Config.hpp"
-#include "../includes/Server.hpp"
+#include "Config.hpp"
+#include "Server.hpp"
 
 Config::Config() { }
 Config::~Config() { }
@@ -72,7 +68,8 @@ void		Config::m_parse_root(std::list<std::string>& line, Location& loc)
 	}
 	else
 	{
-		std::string root = getcwd(nullptr, 1000);
+		char buf[1000];
+		std::string root = getcwd(buf, 1000);
 		root += "/" + line.back();
 		loc.root = root;
 	}

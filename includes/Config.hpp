@@ -2,12 +2,15 @@
 #define CONFIG_HPP
 
 #include <iostream>
+#include <stdexcept>
 #include <vector>
 #include <list>
 #include <stack>
 #include <map>
 #include <fstream>
-#include "../includes/Server.hpp"
+#include <sstream>
+#include <unistd.h>
+#include "Server.hpp"
 
 class Config
 {

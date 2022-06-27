@@ -1,9 +1,5 @@
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <exception>
-#include "../includes/Config.hpp"
-#include "../includes/Server.hpp"
+#include "Config.hpp"
+#include "Server.hpp"
 
 /*
 void	print_location_list(Location &loc)

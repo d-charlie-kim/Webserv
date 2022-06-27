@@ -5,6 +5,9 @@
 #include "Server.hpp"
 #include "Request.hpp"
 #include "Response.hpp"
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 enum Stage
 {
@@ -25,6 +28,7 @@ struct Client
 {
     bool keep;
     int origin_fd;
+	pid_t cgi_pid;
     Stage _stage;
 	Server *server;
 	Request rq;
@@ -34,7 +38,7 @@ struct Client
     std::string tmp_buffer;
 
     Client() : server(nullptr) {}
-    Client(Server *_server) : keep(1), origin_fd(0), _stage(GET_REQUEST), server(_server) {}
+    Client(Server *_server) : keep(1), origin_fd(0), cgi_pid(0), _stage(GET_REQUEST), server(_server) {}
 };
 
 #endif

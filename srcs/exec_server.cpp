@@ -1,7 +1,7 @@
-#include "../includes/Config.hpp"
-#include "../includes/Client.hpp"
-#include "../includes/Connect.hpp"
-#include "../includes/utils.hpp"
+#include "Config.hpp"
+#include "Client.hpp"
+#include "Connect.hpp"
+#include "utils.hpp"
 
 
 static int set_server(Server& server, int& reuse)
@@ -35,14 +35,6 @@ static std::map<int, Server> connect_server(std::vector<Server>& server_list)
 	for (std::vector<Server>::iterator start = server_list.begin(); start != server_list.end(); start++)
 		servers.insert(std::make_pair(set_server(*start, reuse), *start));
 	return (servers);
-}
-
-static void change_events(std::vector<struct kevent>& change_list, uintptr_t ident, int16_t filter, uint16_t flags, uint32_t fflags, intptr_t data, void *udata)
-{
-    struct kevent temp_event;
-
-    EV_SET(&temp_event, ident, filter, flags, fflags, data, udata);
-    change_list.push_back(temp_event);
 }
 
 static void set_events_servers(std::vector<struct kevent>& change_list, std::map<int, Server> servers)

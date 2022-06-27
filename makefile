@@ -1,37 +1,26 @@
-NAME		=	webserv
-CXX			=	c++
-CXXFLAGS	=	-I$(INCDIR) -Wall -Wextra -Werror -std=c++98
-INCDIR		=	includes
-SRCDIR		=	srcs/
+NAME	= webserv
+CXXFLAGS	= -Wall -Wextra -Werror -std=c++98
 
-SRC		=	Config.cpp\
-			exec_server.cpp\
-			Request_parser.cpp\
-			Server.cpp\
-			webserv.cpp\
-			Response.cpp\
-			set_html_file.cpp\
-			utils.cpp\
+SRC 	= Config.cpp exec_server.cpp Request_parser.cpp Response.cpp\
+		  Server.cpp set_html_file.cpp utils.cpp webserv.cpp Cgi.cpp
 
-SRCS	=	$(addprefix $(SRCDIR), $(SRC))
+SRCDIR	= ./srcs/
+SRCS	= $(addprefix $(SRCDIR), $(SRC))
+OBJS	= $(SRCS:.cpp=.o)
+INCDIR	= ./includes/
 
-OBJS 	=	$(SRCS:.cpp=.o)
+%.o:	%.cpp
+			c++ $(CXXFLAGS) -I$(INCDIR) -c $< -o $@
 
-$(NAME)	:	$(OBJS)
-		$(CXX) $(CXXFLAGS) $(OBJS) -o $(NAME)
+$(NAME): $(OBJS)
+	c++ $(CXXFLAGS) -I$(INCDIR) -o $(NAME) $(OBJS)
 
-RM 		=	rm -rf
+all: $(NAME)
 
-all	:	$(NAME)
+clean:
+	$(RM) $(OBJS)
 
-clean	:
-		$(RM) $(OBJS)
+fclean: clean
+	$(RM) $(NAME)
 
-fclean	:	clean
-		$(RM) $(NAME)
-
-re		:
-		make fclean
-		make all
-
-.PHONY	: all clean fclean re
+re: fclean all
