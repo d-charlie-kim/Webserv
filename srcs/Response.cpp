@@ -6,6 +6,13 @@
 #include "Connect.hpp"
 #include "utils.hpp"
 
+void Response::clear()
+{
+	body.clear();
+    file_path.clear();
+    header.clear();
+}
+
 static std::string make_hyper_link(Request& request, std::string path)
 {
 	DIR *dir_ptr = NULL;
@@ -198,7 +205,6 @@ void response(Connect& cn, Client& client, Request& request)
 			client.is_io = true;
 			return ;
 		}
-		std::cout << request.location->cgi << std::endl;
 		set_response(cn, request, client.rs);
 		client.is_io = true;
 	}

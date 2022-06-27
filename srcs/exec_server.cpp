@@ -87,9 +87,6 @@ static void write_data_to_client(Connect& cn)
         {
             std::cout << "client " << cn.curr_event->ident << " write data"<< std::endl;
             std::cout << cn.clients[cn.curr_event->ident].respond_msg << std::endl;
-            cn.clients[cn.curr_event->ident].request_msg.clear();
-            cn.clients[cn.curr_event->ident].respond_msg.clear();
-            cn.clients[cn.curr_event->ident].tmp_buffer.clear();
             if (cn.clients[cn.curr_event->ident].keep == 0)
                 disconnect_client(cn.curr_event->ident, cn.clients);
             cn.clients[cn.curr_event->ident]._stage = CLOSE;
@@ -102,6 +99,7 @@ static void close_client(Connect& cn)
     if (cn.curr_event->data == 0)
         return ;
     cn.clients[cn.curr_event->ident]._stage = GET_REQUEST;
+    cn.clients[cn.curr_event->ident].client_clear();
 }
 
 
@@ -139,6 +137,13 @@ static void file_and_pipe_read(Connect& cn)
     char buf[cn.curr_event->data + 1];
 
     int n = read(cn.curr_event->ident, buf, cn.curr_event->data);
+    if (n <= 0)
+    {
+        if (n < 0)
+            std::cerr << "file & pipe read error!" << std::endl;
+        cn.clients[cn.clients[cn.curr_event->ident].origin_fd].rq.status_code = 500;
+        disconnect_client(cn.curr_event->ident, cn.clients);
+    }
     buf[n] = 0;
     cn.clients[cn.clients[cn.curr_event->ident].origin_fd].tmp_buffer += buf;
     cn.clients[cn.clients[cn.curr_event->ident].origin_fd]._stage = SET_RESOURCE;
@@ -150,16 +155,22 @@ static void file_and_pipe_write(Connect& cn)
 {
     if (cn.clients[cn.curr_event->ident]._stage == CGI_WRITE)
         std::cout << "STAGE CGI_WRITE" << std::endl; 
-    if (cn.clients[cn.curr_event->ident]._stage == FILE_WRITE)
+    else if (cn.clients[cn.curr_event->ident]._stage == FILE_WRITE)
         std::cout << "STAGE FILE_WRITE" << std::endl; 
     std::string& tmp = cn.clients[cn.clients[cn.curr_event->ident].origin_fd].tmp_buffer;
-    write(cn.curr_event->ident, tmp.c_str(), tmp.size());
+    int n = write(cn.curr_event->ident, tmp.c_str(), tmp.size());
+    {
+        if (n < 0)
+            std::cerr << "file & pipe write error!" << std::endl;
+        disconnect_client(cn.curr_event->ident, cn.clients);
+        cn.clients[cn.clients[cn.curr_event->ident].origin_fd].rq.status_code = 500;
+    }
     if (cn.clients[cn.curr_event->ident].cgi_pid != 0)
     {
         int status;
         waitpid(cn.clients[cn.curr_event->ident].cgi_pid, &status, 0);
 	    if (WIFEXITED(status) && WEXITSTATUS(status))
-            cn.clients[cn.curr_event->ident].rq.status_code = 500;
+            cn.clients[cn.clients[cn.curr_event->ident].origin_fd].rq.status_code = 500;
     }
     cn.clients[cn.clients[cn.curr_event->ident].origin_fd].tmp_buffer.clear();
     if (cn.clients[cn.curr_event->ident]._stage != CGI_WRITE)
@@ -228,9 +239,7 @@ static void start_server(int& kq, Connect& cn)
                     else if (cn.clients[cn.curr_event->ident]._stage == CLOSE)
                         continue ;
                     else if (cn.clients[cn.curr_event->ident]._stage == SET_RESOURCE)
-                    {
                         response(cn, cn.clients[cn.curr_event->ident], cn.clients[cn.curr_event->ident].rq);
-                    }
                     else if (cn.clients[cn.curr_event->ident]._stage == SEND_RESPONSE)
                         write_data_to_client(cn);
                     else if (cn.clients[cn.curr_event->ident]._stage == CGI_WRITE ||

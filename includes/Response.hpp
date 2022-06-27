@@ -12,6 +12,8 @@ struct Response
 	std::string	file_path;
 	std::string	header;
 	std::string body;
+
+	void clear();
 };
 
 #endif
