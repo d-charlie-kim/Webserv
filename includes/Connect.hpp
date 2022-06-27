@@ -20,6 +20,6 @@ struct Connect
     struct kevent* curr_event;
     std::map<int, Server> servers;
     std::vector<struct kevent> change_list;
-    std::map<int, std::pair<std::string, std::string> > m_status_code;
+    std::map<int, std::pair<std::string, std::string> > first_line;
 };
 #endif

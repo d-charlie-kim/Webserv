@@ -46,6 +46,6 @@ class Config
 		std::vector<Server>&	get_server_list();
 };
 
-void set_html_file(std::map<int, std::pair<std::string, std::string> >& status_code);
+void set_default_files(std::map<int, std::pair<std::string, std::string> >& first_line);
 
 #endif
