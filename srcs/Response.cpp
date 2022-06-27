@@ -5,7 +5,7 @@
 #include "../includes/Client.hpp"
 #include "../includes/Server.hpp"
 #include "../includes/Response.hpp"
-#include "../includes/Request_parser.hpp"
+#include "../includes/Request.hpp"
 #include "../includes/Connect.hpp"
 
 // TODO request 파트랑 이어지게 정리하기

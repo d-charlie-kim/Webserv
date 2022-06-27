@@ -3,7 +3,7 @@
 
 #include <string>
 #include "Server.hpp"
-#include "Request_parser.hpp"
+#include "Request.hpp"
 #include "Response.hpp"
 
 enum Stage
