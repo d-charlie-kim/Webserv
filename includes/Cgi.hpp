@@ -10,11 +10,10 @@ class Cgi
 {
 	public:
 		int						m_cgi_exec();
-
-	private:
 		Cgi(Connect& connect, Client& client);
 		~Cgi();
 
+	private:
 		Connect&				__cn;
 		const Request&			__request;
 		std::vector<std::string> __v_envlist;
