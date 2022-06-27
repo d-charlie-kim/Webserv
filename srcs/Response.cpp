@@ -6,6 +6,13 @@
 #include "Connect.hpp"
 #include "utils.hpp"
 
+void Response::clear()
+{
+	body.clear();
+    file_path.clear();
+    header.clear();
+}
+
 static std::string make_hyper_link(Request& request, std::string path)
 {
 	DIR *dir_ptr = NULL;
@@ -157,18 +164,15 @@ static void method_exe(Connect& cn, Request& request, Response& response)
 
 static void set_response(Connect& cn, Request& request, Response& response)
 {
-	std::cout << "11" << std::endl;
 	response.header = "HTTP/1.1 ";
 	response.header += ft_itoa(request.status_code);
 	response.header += cn.first_line[request.status_code].first;
 	response.file_path = cn.first_line[request.status_code].second;
-	std::cout << "22" << std::endl;
 	for (std::vector<int>::iterator iter = request.location->p_error_page.first.begin(); iter != request.location->p_error_page.first.end(); iter++)
 	{
 		if (*iter == request.status_code)
 			response.file_path = request.location->p_error_page.second;
 	}
-	std::cout << "33" << std::endl;
 }
 
 static void make_redirection(Connect& cn, Client& client)
@@ -186,36 +190,27 @@ void response(Connect& cn, Client& client, Request& request)
         std::cout << "STAGE SET_RESOURCE" << std::endl; 
 	if (!client.is_io)
 	{
-		std::cout << "1" << std::endl;
 		if (!request.status_code)
 		{
-			std::cout << "2" << std::endl;
 			if (request.location->p_return.first)
 			{
 				make_redirection(cn, client);
 				client._stage = SEND_RESPONSE;
 				return ;
 			}
-			std::cout << "3" << std::endl;
 			method_exe(cn, request, client.rs);
-			std::cout << "4" << std::endl;
 		}
 		if (request.is_cgi && !request.status_code)
 		{
-			std::cout << "5" << std::endl;
 			request.is_cgi = false;
 			client.is_io = true;
 			return ;
 		}
-		std::cout << request.location->cgi << std::endl;
-		std::cout << "6" << std::endl;
 		set_response(cn, request, client.rs);
 		client.is_io = true;
-		std::cout << "7" << std::endl;
 	}
 	else if (client.is_io)
 	{
-		std::cout << "8" << std::endl;
 		if (request.is_cgi && request.status_code)
 		{
 			request.is_cgi = false;
@@ -230,7 +225,6 @@ void response(Connect& cn, Client& client, Request& request)
 			client.respond_msg += "Content-Length: " + ft_itoa(client.rs.body.size());
 		client.respond_msg += "\r\n\r\n";
 		client.respond_msg += client.rs.body;
-		std::cout << "9" << std::endl;
 		client._stage = SEND_RESPONSE;
 	}
 }
