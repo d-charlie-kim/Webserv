@@ -1,7 +1,7 @@
-#include "../includes/Config.hpp"
-#include "../includes/Client.hpp"
-#include "../includes/Connect.hpp"
-#include "../includes/utils.hpp"
+#include "Config.hpp"
+#include "Client.hpp"
+#include "Connect.hpp"
+#include "utils.hpp"
 
 
 static int set_server(Server& server, int& reuse)
