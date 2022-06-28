@@ -97,7 +97,8 @@ static void write_data_to_client(Connect& cn)
             std::cout << cn.clients[cn.curr_event->ident].respond_msg << std::endl;
             if (cn.clients[cn.curr_event->ident].keep == 0)
                 disconnect_client(cn.curr_event->ident, cn.clients);
-            cn.clients[cn.curr_event->ident]._stage = CLOSE;
+            else
+                cn.clients[cn.curr_event->ident]._stage = CLOSE;
         }
     }
 }
