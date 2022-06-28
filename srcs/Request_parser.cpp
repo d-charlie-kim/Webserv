@@ -139,7 +139,7 @@ void	Request_parser::parse_request(Client& client)
 	struct stat		status;
 	std::string		path = request.location->root + request.path;
 	stat(path.c_str(), &status);
-	if (!S_ISREG(status.st_mode))
+	if (S_ISDIR(status.st_mode))
 		request.is_directory = true;
 	
 	// 본격적인 메소드 해석
