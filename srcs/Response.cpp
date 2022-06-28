@@ -166,6 +166,8 @@ static void set_response(Connect& cn, Request& request, Response& response)
 	response.header = "HTTP/1.1 ";
 	response.header += ft_itoa(request.status_code);
 	response.header += " " + cn.first_line[request.status_code].first;
+	if (request.status_code == 200)
+		return ;
 	response.file_path = cn.first_line[request.status_code].second;
 	for (std::vector<int>::iterator iter = request.location->p_error_page.first.begin(); iter != request.location->p_error_page.first.end(); iter++)
 	{
@@ -206,6 +208,18 @@ void response(Connect& cn, Client& client, Request& request)
 			return ;
 		}
 		set_response(cn, request, client.rs);
+
+
+		int file_fd = open(client.rs.file_path.c_str(), O_RDONLY);
+		std::cout << file_fd << " : " << client.rs.file_path << std::endl;
+		change_events(cn.change_list, file_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
+		Client c1;
+		c1.origin_fd = cn.curr_event->ident;
+		c1._stage = FILE_READ;
+		cn.clients.insert(std::make_pair(file_fd, c1));
+		client._stage = WAIT;
+
+
 		client.is_io = true;
 	}
 	else if (client.is_io)
