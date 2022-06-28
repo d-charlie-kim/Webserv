@@ -87,7 +87,7 @@ void	Cgi::m_set_argv()
 
 void	Cgi::m_delete()
 {
-	for (unsigned long i = 0; i < __v_envlist.size(); i++)
+	for (unsigned long i = 0; i < __v_envlist.size() + 1; i++)
 		delete[] __env[i];
 	delete[] __env;
 	delete[] __argv[0];
