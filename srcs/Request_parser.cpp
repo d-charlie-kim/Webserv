@@ -137,8 +137,9 @@ void	Request_parser::parse_request(Client& client)
 
 	// 디렉토리 여부 확인 
 	struct stat		status;
-	stat(request.path.c_str(), &status);
-	if (!S_ISREG(status.st_mode))
+	std::string		path = request.location->root + request.path;
+	stat(path.c_str(), &status);
+	if (S_ISDIR(status.st_mode))
 		request.is_directory = true;
 	
 	// 본격적인 메소드 해석
