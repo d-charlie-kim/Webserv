@@ -42,11 +42,13 @@ Location* Request_parser::search_location(std::string str, std::vector<Location>
 {
 	// 로케이션 완전일치 확인
 	Location *location = search_location_in_list(str, list);
+	std::string tmp_str(str);
+
 	// 최상위 루트까지 상위 디렉토리 하나씩 일치 확인	
-	while (!location && str != "/")
+	while (!location && tmp_str != "/")
 	{
-		str = str.substr(0, str.rfind("/"));
-		location = search_location_in_list(str, list);
+		tmp_str = tmp_str.substr(0, tmp_str.rfind("/"));
+		location = search_location_in_list(tmp_str, list);
 	}
 
 	// cgi 확인
@@ -129,7 +131,7 @@ void	Request_parser::parse_request(Client& client)
 	{
 		// set location & url & path
 		request.url = __l_line.front();
-		request.path = request.url.substr(0,request.url.find("?"));
+		request.path = request.url.substr(0,request.url.find("?"));;
 		location = search_location(request.path, server->location);
 		__l_line.pop_front();	
 	}
