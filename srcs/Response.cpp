@@ -245,9 +245,7 @@ void response(Connect& cn, Client& client, Request& request)
 		client.respond_msg = client.rs.header + "\r\n";
 		if (request.method == GET)
 			client.respond_msg += "Content-Length: " + ft_itoa(client.rs.body.size());
-		client.respond_msg += "\r\n";
-		if (!request.is_cgi)
-			client.respond_msg += "\r\n";
+		client.respond_msg += "\r\n\r\n";
 		client.respond_msg += client.rs.body;
 		client.is_io = false;
 		client._stage = SEND_RESPONSE;
