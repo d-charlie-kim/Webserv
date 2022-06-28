@@ -1,8 +1,17 @@
 #include "Client.hpp"
+#include "Cgi.hpp"
 #include "Server.hpp"
 #include "Response.hpp"
 #include "Request.hpp"
 #include "Connect.hpp"
+#include "utils.hpp"
+
+void Response::clear()
+{
+	body.clear();
+    file_path.clear();
+    header.clear();
+}
 
 static std::string make_hyper_link(Request& request, std::string path)
 {
@@ -40,7 +49,7 @@ static std::string make_hyper_link(Request& request, std::string path)
 		a_tag += file->d_name;
 		a_tag += "\">";
 		a_tag += file->d_name;
-		a_tag += "<\a>\n";
+		a_tag += "</a>\n";
 	}
 	return a_tag;
 }
@@ -56,7 +65,6 @@ static std::string get_directory_name(Request& request, std::string path)
 
 static void make_auto_index_page(Client& client, Request& request, Response& response)
 {
-	//TODO auto_index는 하드코딩으로 들고온다.
 	std::string	auto_index = "<!DOCTYPE html>\r\n<html lang=\"en\">\r\n<head>\r\n	<style>\r\n		body {\r\n			padding: 30px;\r\n		}\r\n		h1, h2 {\r\n			font-weight: 400;\r\n			margin: 0;\r\n		}\r\n		h1 > span {\r\n			font-weight: 900;\r\n		}\r\n		ul > li {\r\n			font-size: 20px;\r\n		}\r\n	</style>\r\n	<meta charset=\"UTF-8\">\r\n	<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n	<title>Webserv index of $1</title>\r\n</head>\r\n<body>\r\n	<h1>Webserv index of <span>$1</span></h1>\r\n	<hr>\r\n	<ul>\r\n		<pre>$2</pre>\r\n	</ul>\r\n	<hr>\r\n</body>\r\n</html>\r\n";
 	std::string name_dir = get_directory_name(request, request.path); // 해당 directory 이름
 	std::string read_dir = make_hyper_link(request, request.location->root + request.path); // readir 함수 사용해서 읽어온 파일 목록
@@ -77,7 +85,7 @@ static void make_auto_index_page(Client& client, Request& request, Response& res
 
 	response.header = "HTTP/1.1 200 OK";
 	client.respond_msg = response.header + "\r\n\r\n" + response.body;
-	//STAGE = 3;
+	client._stage = SEND_RESPONSE;
 }
 
 static void method_get(Connect& cn, Request& request, Response& response)
@@ -157,7 +165,9 @@ static void set_response(Connect& cn, Request& request, Response& response)
 {
 	response.header = "HTTP/1.1 ";
 	response.header += ft_itoa(request.status_code);
-	response.header += cn.first_line[request.status_code].first;
+	response.header += " " + cn.first_line[request.status_code].first;
+	if (request.status_code == 200)
+		return ;
 	response.file_path = cn.first_line[request.status_code].second;
 	for (std::vector<int>::iterator iter = request.location->p_error_page.first.begin(); iter != request.location->p_error_page.first.end(); iter++)
 	{
@@ -172,19 +182,21 @@ static void make_redirection(Connect& cn, Client& client)
 	client.respond_msg += ft_itoa(client.rq.location->p_return.first);
 	client.respond_msg += " " + cn.first_line[client.rq.location->p_return.first].first;
 	client.respond_msg += "\r\n";
-	client.respond_msg += "Location: " + client.rq.location->p_return.second;
+	client.respond_msg += "Location: " + client.rq.location->p_return.second + "\r\n\r\n";
 }
 
 void response(Connect& cn, Client& client, Request& request)
 {
-	//if (STAGE == 1번)
+	if (cn.clients[cn.curr_event->ident]._stage == SET_RESOURCE)
+        std::cout << "STAGE SET_RESOURCE" << std::endl; 
+	if (!client.is_io)
 	{
 		if (!request.status_code)
 		{
 			if (request.location->p_return.first)
 			{
 				make_redirection(cn, client);
-				//STAGE = 3번
+				client._stage = SEND_RESPONSE;
 				return ;
 			}
 			method_exe(cn, request, client.rs);
@@ -192,18 +204,30 @@ void response(Connect& cn, Client& client, Request& request)
 		if (request.is_cgi && !request.status_code)
 		{
 			request.is_cgi = false;
-			//STAGE = 2번
+			client.is_io = true;
 			return ;
 		}
 		set_response(cn, request, client.rs);
-		//STAGE = 2번
+
+
+		int file_fd = open(client.rs.file_path.c_str(), O_RDONLY);
+		std::cout << file_fd << " : " << client.rs.file_path << std::endl;
+		change_events(cn.change_list, file_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
+		Client c1;
+		c1.origin_fd = cn.curr_event->ident;
+		c1._stage = FILE_READ;
+		cn.clients.insert(std::make_pair(file_fd, c1));
+		client._stage = WAIT;
+
+
+		client.is_io = true;
 	}
-	//else if (STAGE == 2번)
+	else if (client.is_io)
 	{
 		if (request.is_cgi && request.status_code)
 		{
 			request.is_cgi = false;
-			//STAGE = 1번
+			client.is_io = false;
 			return ;
 		}
 		else if (request.is_cgi && !request.status_code)
@@ -214,6 +238,7 @@ void response(Connect& cn, Client& client, Request& request)
 			client.respond_msg += "Content-Length: " + ft_itoa(client.rs.body.size());
 		client.respond_msg += "\r\n\r\n";
 		client.respond_msg += client.rs.body;
-		// STAGE = 3번
+		client._stage = SEND_RESPONSE;
+		client.is_io = false;
 	}
 }

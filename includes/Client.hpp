@@ -12,7 +12,6 @@
 enum Stage
 {
 	GET_REQUEST,
-	END_OF_REQUEST,
 	SET_RESOURCE,
 	SEND_RESPONSE,
 	MAKE_AUTOINDEX,
@@ -27,6 +26,7 @@ enum Stage
 struct Client
 {
     bool keep;
+	bool is_io;
     int origin_fd;
 	pid_t cgi_pid;
     Stage _stage;
@@ -37,8 +37,9 @@ struct Client
     std::string respond_msg;
     std::string tmp_buffer;
 
-    Client() : server(nullptr) {}
-    Client(Server *_server) : keep(1), origin_fd(0), cgi_pid(0), _stage(GET_REQUEST), server(_server) {}
+    Client();
+    Client(Server *_server);
+	void client_clear();
 };
 
 #endif
