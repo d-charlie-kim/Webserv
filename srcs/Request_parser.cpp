@@ -131,7 +131,7 @@ void	Request_parser::parse_request(Client& client)
 	{
 		// set location & url & path
 		request.url = __l_line.front();
-		request.path = request.url.substr(0,request.url.find("?"));;
+		request.path = request.url.substr(0,request.url.find("?"));
 		location = search_location(request.path, server->location);
 		__l_line.pop_front();	
 	}
