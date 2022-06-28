@@ -14,6 +14,7 @@ struct Request
 	std::string		connection;
 	int				content_length;
 	std::string		content_type;
+	bool			is_chunk_body;
 	std::string		body;
 	int				status_code; // 초기값 0 
 

@@ -103,6 +103,46 @@ std::list<std::string> Request_parser::m_next_line()
 	return (__l_file.front());
 }
 
+std::list<std::string>		split_line(std::string	origin)
+{
+	std::list<std::string>		list;
+	size_t			pos = origin.find("\r\n");
+	while (pos != std::string::npos)
+	{
+		std::string		line = origin.substr(0, pos);
+		origin = origin.substr(pos + 2);
+		list.push_back(line);
+		pos = origin.find("\r\n");
+	}
+	return list;
+}
+
+size_t		unchunk_data(std::list<std::string> list, std::string& body, int &status_code)
+{
+	size_t			length_size;
+	while(!list.empty())
+	{
+		std::stringstream	iss(list.front());
+		list.pop_front();
+		iss >> std::hex >> length_size;
+		if (iss.fail() || length_size != list.front().size())
+			status_code = 400;
+		body.append(list.front());
+		list.pop_front();
+	}
+	return length_size;
+}
+
+void		Request_parser::m_unchunk_after_body_clear(bool& is_enough_body_length)
+{
+	std::list<std::string>		list = split_line(request.body);
+	request.body.clear();
+	size_t last_length = unchunk_data(list, request.body, request.status_code);
+	
+	if (last_length != 0)
+		is_enough_body_length = false;
+}
+
 void	Request_parser::parse_request(Client& client)
 {
 	Server *server = client.server;
@@ -193,6 +233,13 @@ void	Request_parser::parse_request(Client& client)
 			request.connection = __l_line.back();
 		if (__l_line.front() == "Content-Type:" && __l_line.size() == 2)
 			request.content_type = __l_line.back();
+		if (__l_line.front() == "Transfer-Encoding:" && __l_line.size() == 2 && __l_line.back() == "chunked")
+		{
+			m_unchunk_after_body_clear(is_enough_body_length);
+			request.is_chunk_body = true;
+			post_must_have_content_length = true;
+			request.content_length = request.body.size();
+		}
 	}
 
 	if (!post_must_have_content_length)
@@ -201,11 +248,18 @@ void	Request_parser::parse_request(Client& client)
 		client._stage = SET_RESOURCE; // FLAG처리 이상이 있으면 stage그대로 없으면 변경 3번째거로로 SET_RESOURCE
 }
 
-
 void request_msg_parsing(Client& client)
 {
 	if(client.rq.content_length)
 	{
+		if (client.rq.is_chunk_body)
+		{
+			std::list<std::string> list = split_line(client.request_msg);
+			size_t last_length = unchunk_data(list, client.rq.body, client.rq.status_code);
+			if (client.rq.status_code || last_length == 0)
+				client._stage = SET_RESOURCE;
+			return ;
+		}
 		size_t		size_to_copy = client.rq.body.size() - client.rq.content_length;
 		client.rq.body += client.request_msg.substr(0, size_to_copy);
 		client._stage = SET_RESOURCE;
@@ -214,4 +268,6 @@ void request_msg_parsing(Client& client)
 	Request_parser		parser(client.request_msg);
 	parser.parse_request(client);
 	client.rq = parser.request;
+	if (client.rq.status_code)
+		client._stage = SET_RESOURCE;
 }
