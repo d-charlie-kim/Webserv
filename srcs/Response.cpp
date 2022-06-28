@@ -205,7 +205,6 @@ void response(Connect& cn, Client& client, Request& request)
 		}
 		if (request.is_cgi && !request.status_code)
 		{
-			request.is_cgi = false;
 			client.is_io = true;
 			return ;
 		}
@@ -239,7 +238,9 @@ void response(Connect& cn, Client& client, Request& request)
 		client.respond_msg = client.rs.header + "\r\n";
 		if (request.method == GET)
 			client.respond_msg += "Content-Length: " + ft_itoa(client.rs.body.size());
-		client.respond_msg += "\r\n\r\n";
+		client.respond_msg += "\r\n";
+		if (!request.is_cgi)
+			client.respond_msg += "\r\n";
 		client.respond_msg += client.rs.body;
 		client._stage = SEND_RESPONSE;
 		client.is_io = false;

@@ -6,7 +6,7 @@ Request::Request() : method(0), url(""), path(""), location(nullptr), is_cgi(0),
 Request& Request::operator=(Request& rq)
 {
 	method = rq.method;
-	url = rq.body;
+	url = rq.url;
 	path = rq.path;
 	location = rq.location;
 	is_cgi = rq.is_cgi;

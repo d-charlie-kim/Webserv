@@ -63,11 +63,12 @@ std::string	Cgi::m_get_method(int method)
 
 void	Cgi::m_set_env()
 {
-	__env = new char*[__v_envlist.size()];
+	__env = new char*[__v_envlist.size() + 1];
 	for (unsigned long i = 0; i < __v_envlist.size(); i++)
 	{
-		__env[i] = new char[__v_envlist[i].size()];
+		__env[i] = new char[__v_envlist[i].size() + 1];
 		strcpy(__env[i], __v_envlist[i].c_str());
+		__env[i][__v_envlist[i].size()] = 0;
 	}
 	__env[__v_envlist.size()] = nullptr;
 }
@@ -75,16 +76,18 @@ void	Cgi::m_set_env()
 void	Cgi::m_set_argv()
 {
 	std::string cgi_path = __cwd + "/cgi-bin/php-cgi"; //cgi exec 변경
-	__argv[0] = new char[__cwd.size() + cgi_path.size()];
-	strcpy(__argv[0], cgi_path	.c_str());
-	__argv[1] = new char[__requested_uri.size()];
+	__argv[0] = new char[__cwd.size() + cgi_path.size() + 1];
+	strcpy(__argv[0], cgi_path.c_str());
+	__argv[0][__cwd.size() + cgi_path.size()] = 0;
+	__argv[1] = new char[__requested_uri.size() + 1];
 	strcpy(__argv[1], __requested_uri.c_str());
+	__argv[1][__requested_uri.size()] = 0;
 	__argv[2] = nullptr;
 }
 
 void	Cgi::m_delete()
 {
-	for (unsigned long i = 0; i < __v_envlist.size(); i++)
+	for (unsigned long i = 0; i < __v_envlist.size() + 1; i++)
 		delete[] __env[i];
 	delete[] __env;
 	delete[] __argv[0];
@@ -134,5 +137,5 @@ int		Cgi::m_cgi_exec()
 	__cn.clients.insert(std::make_pair(pipe_out[READ], c2));
 	__cn.clients[__cn.curr_event->ident]._stage = WAIT;
 	m_delete();
-	return (200);
+	return (0);
 }
