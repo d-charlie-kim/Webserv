@@ -62,26 +62,43 @@ static void set_html_file(std::map<int, std::pair<std::string, std::string> >& f
 		wFile << "</h1>\r\n</body>\r\n</html>\r\n";
 		wFile.close();
 	}
-	wFile.open("./www/autoindex.html");
-	if (wFile.fail())
-		throw std::out_of_range("Error, Fail to set HTML file");
-	wFile << "<!DOCTYPE html>\r\n<html lang=\"en\">\r\n<head>\r\n	<style>\r\n		body {\r\n			padding: 30px;\r\n		}\r\n		h1, h2 {\r\n			font-weight: 400;\r\n			margin: 0;\r\n		}\r\n		h1 > span {\r\n			font-weight: 900;\r\n		}\r\n		ul > li {\r\n			font-size: 20px;\r\n		}\r\n	</style>\r\n	<meta charset=\"UTF-8\">\r\n	<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n	<title>Webserv index of $1</title>\r\n</head>\r\n<body>\r\n	<h1>Webserv index of <span>$1</span></h1>\r\n	<hr>\r\n	<ul>\r\n		<pre>$2</pre>\r\n	</ul>\r\n	<hr>\r\n</body>\r\n</html>\r\n";
-	wFile.close();
-
 	wFile.open("./www/index.html");
 	if (wFile.fail())
 		throw std::out_of_range("Error, Fail to set HTML file");
 	wFile << "<!DOCTYPE html>\r\n<html>\r\n<head>\r\n<title>Welcome to Webserv!</title>\r\n<style>\r\nhtml { color-scheme: light dark; }\r\nbody { width: 35em; margin: 0 auto;\r\nfont-family: Tahoma, Verdana, Arial, sans-serif; }\r\nh2 { color:darksalmon; }\r\n</style>\r\n</head>\r\n<body>\r\n<h1>Welcome to Webserv!</h1>\r\n<h2>First index page</h2>\r\n<p>If you see this page, the Webserv is successfully installed and\r\nworking. Further configuration is required.</p>\r\n\r\n<p>For online documentation and support please refer to\r\n<a href=\"http://nginx.org/\">nginx.org</a>.<br/>\r\nCommercial support is available at\r\n<a href=\"http://nginx.com/\">nginx.com</a>.</p>\r\n\r\n<p><em>Thank you for using webserv.</em></p>\r\n\r\n<hr>\r\n<p>1. Receive data with <em>\"GET\"</em> method</p>\r\n<p>-> Data that may be exposed as URL</p>\r\n<form action=\"./cgi-bin/get_name.php\" method=\"get\">\r\n	First Name: <input type = \"text\" name = \"first_name\"> <br />\r\n	Last Name: <input type = \"text\" name = \"last_name\" />\r\n	<input type = \"submit\" value = \"Submit\" />\r\n</form>\r\n\r\n<hr>\r\n<p>2. Receive data with <em>\"POST\"</em> method</p>\r\n<p>-> Data that should not be exposed as URL</p>\r\n<form action=\"./cgi-bin/get_profile.php\" method=\"post\">\r\n	ID : <input type = \"text\" name = \"ID\"> <br />\r\n	PW : <input type = \"text\" name = \"PW\" />\r\n	<input type = \"submit\" value = \"Submit\" />\r\n</form>\r\n\r\n<hr>\r\n<p>3. Uploade File</p>\r\n<form action=\"/cgi-bin/upload.php\" method=\"post\" enctype=\"multipart/form-data\">\r\n	Select image to upload:\r\n	<input type=\"file\" name=\"fileToUpload\" id=\"fileToUpload\">\r\n	<input type=\"submit\" value=\"Upload Image\" name=\"submit\">\r\n</form>\r\n\r\n</body>\r\n</html>\r\n";
 	wFile.close();
+
+	wFile.open("./www/cgi_test.html");
+	if (wFile.fail())
+		throw std::out_of_range("Error, Fail to set HTML file");
+	wFile << "<!DOCTYPE html>\r\n<head>\r\n	<title>PHP Test</title>\r\n	<style>\r\n		body {margin : auto 40%;}\r\n		h1 {font-size : 50px;}\r\n	</style>\r\n</head>\r\n<body>\r\n	<h1> CGI Test</h1>\r\n	<h2>GET Test</h2>\r\n	<form action=\"/cgi-bin/get.php\" method=\"get\">\r\n		<p>Input 1 : <input type=\"text\" name=\"first\"> </p>\r\n		<p>Input 2 : <input type=\"text\" name=\"second\"> </p>\r\n		<input type=\"submit\" value=\"Submit\">\r\n	</form>\r\n	<h2>POST Test - text</h2>\r\n	<form action=\"/cgi-bin/post_text.php\" method=\"post\">\r\n		<p>Input 1 : <input type=\"text\" name=\"first\"> </p>\r\n		<p>Input 2 : <input type=\"text\" name=\"second\"> </p>\r\n		<input type=\"submit\" value=\"Submit\">\r\n	</form>\r\n	<h2>POST Test - file</h2>\r\n	<form action=\"/cgi-bin/post_file.php\" method=\"post\" enctype=\"multipart/form-data\">\r\n		<p>Image to upload : <input type=\"file\" name=\"img\"> </p>\r\n	</form>\r\n</body>\r\n</html>";
+	wFile.close();
 }
 
-// static void set_php_file()
-// {
+static void set_php_file()
+{
+	std::ofstream wFile;
+	wFile.open("./cgi-bin/get.php");
+	if (wFile.fail())
+		throw std::out_of_range("Error, Fail to set PHP file");
+	wFile << "<?php\r\n$body = \"<!DOCTYPE html>\\n\";\r\n$body .= \"<head>\\n\";\r\n$body .= \"<title>PHP GET Test Result</title>\\n\";\r\n$body .= \"</head>\\n\";\r\n$body .= \"<body>\\n\";\r\n$body .= \"<h1>PHP GET Test Result</h1>\\n\";\r\nif (!isset($_REQUEST[\"first\"]))\r\n	$body .= \"No first input<p>\\n\";\r\nelse\r\n{\r\n	$body .= \"<p>First input : [ \";\r\n	$body .= $_REQUEST[\"first\"];\r\n	$body .= \" ]</p>\";\r\n}\r\nif (!isset($_REQUEST[\"first\"]))\r\n	$body .= \"No second input<p>\\n\";\r\nelse\r\n{\r\n	$body .= \"<p>Second input : [ \";\r\n	$body .= $_REQUEST[\"second\"];\r\n	$body .= \" ]</p>\";\r\n}\r\n$body .= \"</body>\\n\";\r\n$body .= \"</html>\\n\";\r\necho $body;\r\n?>";
+	wFile.close();
+
+	wFile.open("./cgi-bin/post_file.php");
+	if (wFile.fail())
+		throw std::out_of_range("Error, Fail to set PHP file");
+	wFile << "<?php\r\n$target_dir = \"uploads/\";\r\n$target_file = $target_dir . basename($_FILES[\"fileToUpload\"][\"name\"]);\r\n$uploadOk = 1;\r\n$imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));\r\n\r\n$msg = \"\";\r\n\r\nif (file_exists($target_file))\r\n{\r\n	$msg .= \"[ERROR] file already exists<br>\";\r\n	$uploadOk = 0;\r\n}\r\n\r\nif ($uploadOk == 1)\r\n{\r\n	if (move_uploaded_file($_FILES[\"fileToUpload\"][\"tmp_name\"], $target_file))\r\n		$msg .=\"The file [\" . htmlspecialchars(basename($_FILES[\"fileToUpload\"][\"name\"])) . \"] has been uploaded.\";\r\n	else\r\n		$msg .= \"Sorry, your file was not uploaded\";\r\n}\r\nelse\r\n{\r\n	$msg .= \"Sorry, your file was not uploaded\";\r\n}\r\n\r\n$body = \"<!DOCTYPE html>\\n\";\r\n$body .= \"<head>\\n\";\r\n$body .= \"<title>PHP POST-file Test Result</title>\\n\";\r\n$body .= \"</head>\\n\";\r\n$body .= \"<body>\\n\";\r\n$body .= \"<h1>PHP POST-file Test Result</h1>\\n\";\r\n\r\n$body .= \"<p>\";\r\n$body .= $msg;\r\n$body .= \"</p>\";\r\n$body .= \"</body>\\n\";\r\n$body .= \"</html>\\n\";\r\n\r\necho $body;\r\n?>";
+	wFile.close();
 	
-// }
+	wFile.open("./cgi-bin/post_text.php");
+	if (wFile.fail())
+		throw std::out_of_range("Error, Fail to set PHP file");
+	wFile << "<?php\r\n$body = \"<!DOCTYPE html>\\n\";\r\n$body .= \"<head>\\n\";\r\n$body .= \"<title>PHP POST-text Test Result</title>\\n\";\r\n$body .= \"</head>\\n\";\r\n$body .= \"<body>\\n\";\r\n$body .= \"<h1>PHP POST Test - text Result</h1>\\n\";\r\nif (!isset($_REQUEST[\"first\"]))\r\n	$body .= \"No first input<p> \\n\";\r\nelse\r\n{\r\n	$body .= \"<p>First input : [ \";\r\n	$body .= $_REQUEST[\"first\"];\r\n	$body .= \" ]</p>\";\r\n}\r\nif (!isset($_REQUEST[\"first\"]))\r\n	$body .= \"No second input<p> \\n\";\r\nelse\r\n{\r\n	$body .= \"<p>Second input : [ \";\r\n	$body .= $_REQUEST[\"second\"];\r\n	$body .= \" ]</p>\";\r\n}\r\n$body .= \"</body>\\n\";\r\n$body .= \"</html>\\n\";\r\n\r\necho $body;\r\n?>";
+	wFile.close();
+}
 
 void set_default_files(std::map<int, std::pair<std::string, std::string> >& first_line)
 {
 	set_html_file(first_line);
-	// set_php_file();
+	set_php_file();
 }

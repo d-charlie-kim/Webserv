@@ -168,6 +168,8 @@ static void set_response(Connect& cn, Request& request, Response& response)
 	response.header += " " + cn.first_line[request.status_code].first;
 	if (request.status_code == 200)
 		return ;
+	else if (request.status_code >= 400)
+		cn.clients[cn.curr_event->ident].keep = false;
 	response.file_path = cn.first_line[request.status_code].second;
 	for (std::vector<int>::iterator iter = request.location->p_error_page.first.begin(); iter != request.location->p_error_page.first.end(); iter++)
 	{
