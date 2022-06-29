@@ -226,23 +226,28 @@ void response(Connect& cn, Client& client, Request& request)
 	}
 	else if (client.is_io)
 	{
-		if (request.is_cgi && request.status_code)
+		if (request.is_cgi && request.status_code) // error.html 읽으러 다시 들어오세요
 		{
 			request.is_cgi = false;
 			client.is_io = false;
+			client.tmp_buffer.clear();
 			return ;
 		}
 		else if (request.is_cgi && !request.status_code)
-			client.rs.header = "HTTP/1.1 200 OK";
+		{
+			client.respond_msg = "HTTP/1.1 200 OK";
+			client.respond_msg += client.tmp_buffer;
+			client.is_io = false;
+			client._stage = SEND_RESPONSE;
+			return ;
+		}
 		client.rs.body = client.tmp_buffer;
 		client.respond_msg = client.rs.header + "\r\n";
 		if (request.method == GET)
 			client.respond_msg += "Content-Length: " + ft_itoa(client.rs.body.size());
-		client.respond_msg += "\r\n";
-		if (!request.is_cgi)
-			client.respond_msg += "\r\n";
+		client.respond_msg += "\r\n\r\n";
 		client.respond_msg += client.rs.body;
-		client._stage = SEND_RESPONSE;
 		client.is_io = false;
+		client._stage = SEND_RESPONSE;
 	}
 }
