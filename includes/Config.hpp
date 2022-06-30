@@ -11,6 +11,7 @@
 #include <sstream>
 #include <unistd.h>
 #include "Server.hpp"
+#include "Connect.hpp"
 
 class Config
 {
