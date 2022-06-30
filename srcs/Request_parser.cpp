@@ -187,7 +187,7 @@ void	Request_parser::parse_request(Client& client)
 	
 	// 본격적인 메소드 해석
 	int method = parse_method(method_str);
-	if (!method)
+	if (!method || (method & POST && !request.body.size()))
 	{
 		request.status_code = 400;
 		return ;
