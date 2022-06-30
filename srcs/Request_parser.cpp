@@ -152,7 +152,6 @@ void	Request_parser::parse_request(Client& client)
 	request.path = "/";
 	request.location = location;
 
-	memset(&request, 0, sizeof(Request));
 	split_request_msg();
 	if (request.status_code)
 		return ;
