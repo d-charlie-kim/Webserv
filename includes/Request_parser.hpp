@@ -23,6 +23,7 @@ class Request_parser
 		void		split_request_msg();
 		Location*	search_location(std::string str, std::vector<Location> &list);
 		std::list<std::string> m_next_line();
+		void		m_unchunk_after_body_clear(bool& is_enough_body_length);
 
 	public:
 		Request_parser(std::string request_msg);
