@@ -185,12 +185,15 @@ static void file_and_pipe_write(Connect& cn)
             std::cerr << "cgi wait error!" << std::endl;
             cn.clients[cn.clients[cn.curr_event->ident].origin_fd].rq.status_code = 500;
         }
+        cn.clients[cn.clients[cn.curr_event->ident].origin_fd].tmp_buffer.clear();
+        std::cout << "client disconnected: " << cn.curr_event->ident<< std::endl;
+        cn.clients.erase(cn.curr_event->ident);
+        return ;
     }
     cn.clients[cn.clients[cn.curr_event->ident].origin_fd].tmp_buffer.clear();
-    if (cn.clients[cn.curr_event->ident]._stage != CGI_WRITE)
-        cn.clients[cn.clients[cn.curr_event->ident].origin_fd]._stage = SET_RESOURCE;
+    cn.clients[cn.clients[cn.curr_event->ident].origin_fd]._stage = SET_RESOURCE;
     std::cout << "client disconnected: " << cn.curr_event->ident<< std::endl;
-    cn.clients.erase(cn.curr_event->ident);
+    disconnect_client(cn.curr_event->ident, cn.clients);
 }
 
 static void get_client(Connect& cn)
