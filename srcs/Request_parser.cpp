@@ -71,14 +71,10 @@ std::list<std::string>		split_word(std::string str)
 
 void	Request_parser::split_request_msg()
 {
+	request.body = "";
 	size_t pos = __request_msg.find("\r\n\r\n");
-	if (pos == std::string::npos)
-	{
-		// 헤더 바디 구분 개행이 아예 없어서 400 Bad Request
-		request.status_code = 400;
-		return;
-	}
-	request.body = __request_msg.substr(pos + 4);
+	if (pos != std::string::npos)
+		request.body = __request_msg.substr(pos + 4);
 
 	std::string header = __request_msg.substr(0, pos);
 
@@ -171,6 +167,11 @@ void	Request_parser::parse_request(Client& client)
 	{
 		// set location & url & path
 		request.url = __l_line.front();
+		if (request.url.find(":") != std::string::npos)
+		{
+			request.status_code = 400;
+			return ;
+		}
 		request.path = request.url.substr(0,request.url.find("?"));
 		location = search_location(request.path, server->location);
 		__l_line.pop_front();	
