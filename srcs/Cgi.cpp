@@ -130,7 +130,7 @@ int		Cgi::m_cgi_exec()
 	Client c2;
 	c1.origin_fd = __cn.curr_event->ident; //현재 클라이언트 socket fd
 	c2.origin_fd = __cn.curr_event->ident; //현재 클라이언트 socket fd
-	c1.cgi_pid = pid;
+	c2.cgi_pid = pid;
 	c1._stage = CGI_WRITE;
 	c2._stage = CGI_READ;
 	__cn.clients.insert(std::make_pair(pipe_in[WRITE], c1));
