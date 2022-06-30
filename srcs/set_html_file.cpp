@@ -72,7 +72,7 @@ static void set_html_file(std::map<int, std::pair<std::string, std::string> >& f
 	wFile.open("./www/cgi_test.html");
 	if (wFile.fail())
 		throw std::out_of_range("Error, Fail to set HTML file");
-	wFile << "<!DOCTYPE html>\r\n<head>\r\n	<title>PHP Test</title>\r\n	<style>\r\n		body {margin : auto 40%;}\r\n		h1 {font-size : 50px;}\r\n	</style>\r\n</head>\r\n<body>\r\n	<h1> CGI Test</h1>\r\n	<h2>GET Test</h2>\r\n	<form action=\"/cgi-bin/get.php\" method=\"get\">\r\n		<p>Input 1 : <input type=\"text\" name=\"first\"> </p>\r\n		<p>Input 2 : <input type=\"text\" name=\"second\"> </p>\r\n		<input type=\"submit\" value=\"Submit\">\r\n	</form>\r\n	<h2>POST Test - text</h2>\r\n	<form action=\"/cgi-bin/post_text.php\" method=\"post\">\r\n		<p>Input 1 : <input type=\"text\" name=\"first\"> </p>\r\n		<p>Input 2 : <input type=\"text\" name=\"second\"> </p>\r\n		<input type=\"submit\" value=\"Submit\">\r\n	</form>\r\n	<h2>POST Test - file</h2>\r\n	<form action=\"/cgi-bin/post_file.php\" method=\"post\" enctype=\"multipart/form-data\">\r\n		<p>Image to upload : <input type=\"file\" name=\"img\"> </p>\r\n	</form>\r\n</body>\r\n</html>";
+	wFile << "<!DOCTYPE html>\r\n<head>\r\n	<title>PHP Test</title>\r\n	<style>\r\n		body {margin : auto 40%;}\r\n		h1 {font-size : 50px;}\r\n	</style>\r\n</head>\r\n<body>\r\n	<h1> CGI Test</h1>\r\n	<h2>GET Test</h2>\r\n	<form action=\"/cgi-bin/get.php\" method=\"get\">\r\n		<p>Input 1 : <input type=\"text\" name=\"first\"> </p>\r\n		<p>Input 2 : <input type=\"text\" name=\"second\"> </p>\r\n		<input type=\"submit\" value=\"Submit\">\r\n	</form>\r\n	<h2>POST Test - text</h2>\r\n	<form action=\"/cgi-bin/post_text.php\" method=\"post\">\r\n		<p>Input 1 : <input type=\"text\" name=\"first\"> </p>\r\n		<p>Input 2 : <input type=\"text\" name=\"second\"> </p>\r\n		<input type=\"submit\" value=\"Submit\">\r\n	</form>\r\n	<h2>POST Test - file</h2>\r\n	<form action=\"/cgi-bin/post_file.php\" method=\"post\" enctype=\"multipart/form-data\">\r\n		<p>Image to upload : <input type=\"file\" name=\"img\"> </p>\r\n	</form>\r\n</body>\r\n</html>\r\n";
 	wFile.close();
 }
 
@@ -100,7 +100,7 @@ static void set_php_file()
 
 void set_default_files(Connect& cn, std::map<int, std::pair<std::string, std::string> >& first_line)
 {
-	cn.default_error_page = "<!DOCTYPE html>\r\n<html>\r\n<head>\r\n	<title>Default Error Page</title>\r\n</head>\r\n<body>\r\n	<h1>This is Default error page</h1>\r\n</body>\r\n</html>";
+	cn.default_error_page = "<!DOCTYPE html>\r\n<html>\r\n<head>\r\n	<title>Default Error Page</title>\r\n</head>\r\n<body>\r\n	<h1>This is Default error page</h1>\r\n</body>\r\n</html>\r\n";
 	set_html_file(first_line);
 	set_php_file();
 }
