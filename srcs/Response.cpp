@@ -143,8 +143,9 @@ static void method_get(Connect& cn, Request& request, Response& response)
 static void method_post(Connect& cn, Request& request, Client& client)
 {
 	struct stat		status;
+	std::string path = request.location->root + request.path;
 
-	if (stat(request.path.c_str(), &status)) // 존재하지 않는 경로
+	if (stat(path.c_str(), &status)) // 존재하지 않는 경로
 		request.status_code = 404;
 	else if (request.is_directory || request.is_cgi) // 디렉토리 이거나 정적 파일이라면
 		request.status_code = 405;
@@ -162,8 +163,9 @@ static void method_post(Connect& cn, Request& request, Client& client)
 static void method_delete(Request& request, Client& client)
 {
 	struct stat		status;
+	std::string path = request.location->root + request.path;
 
-	if (stat(request.path.c_str(), &status)) // 존재하지 않는 경로
+	if (stat(path.c_str(), &status)) // 존재하지 않는 경로
 		request.status_code = 404;
 	else if (request.is_directory) // 디렉토리
 		request.status_code = 405;
@@ -171,8 +173,6 @@ static void method_delete(Request& request, Client& client)
 		request.status_code = 405;
 	else
 	{
-		std::string path = "";
-		path = "." + request.path;
 		int ret = remove(path.c_str());
 		if (ret)
 			request.status_code = 405;
@@ -286,8 +286,7 @@ void response(Connect& cn, Client& client, Request& request)
 		}
 		client.rs.body = client.tmp_buffer;
 		client.respond_msg = client.rs.header + "\r\n";
-		if (request.method == GET)
-			client.respond_msg += "Content-Length: " + ft_itoa(client.rs.body.size());
+		client.respond_msg += "Content-Length: " + ft_itoa(client.rs.body.size());
 		client.respond_msg += "\r\n\r\n";
 		client.respond_msg += client.rs.body;
 		client.is_io_done = false;
