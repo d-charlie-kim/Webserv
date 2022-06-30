@@ -64,7 +64,16 @@ void		Config::m_parse_root(std::list<std::string>& line, Location& loc)
 		throw std::invalid_argument("Invalid config file : The number of root arguments is incorrect");
 	if (line.back().front() == '/')
 	{
-		loc.root = line.back();
+		char buf[1000];
+		loc.root = getcwd(buf, 1000);
+		loc.root += line.back();
+	}
+	else
+	{
+		char buf[1000];
+		loc.root = getcwd(buf, 1000);
+		loc.root += "/";
+		loc.root += line.back();
 	}
 }
 
