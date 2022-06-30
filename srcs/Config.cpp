@@ -69,12 +69,7 @@ void		Config::m_parse_root(std::list<std::string>& line, Location& loc)
 		loc.root += line.back();
 	}
 	else
-	{
-		char buf[1000];
-		loc.root = getcwd(buf, 1000);
-		loc.root += "/";
 		loc.root += line.back();
-	}
 }
 
 void		Config::m_parse_index(std::list<std::string>& line, Location& loc)
