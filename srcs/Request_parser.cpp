@@ -263,7 +263,7 @@ void request_msg_parsing(Client& client)
 		}
 		size_t		size_to_copy = client.rq.body.size() - client.rq.content_length;
 		client.rq.body += client.request_msg.substr(0, size_to_copy);
-		if (client.rq.body.size() >= client.rq.content_length)
+		if (client.rq.body.size() >= static_cast<size_t>(client.rq.content_length))
 			client._stage = SET_RESOURCE;
 		return ;
 	}

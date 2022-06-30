@@ -1,6 +1,15 @@
 #include "Cgi.hpp"
 #include "utils.hpp"
 
+#define NC "\033[0m"
+#define BLCK "\033[30m"
+#define RED  "\033[31m"
+#define GREN "\033[32m"
+#define YLLW "\033[33m"
+#define BLUE "\033[34m"
+#define PRPL "\033[35m"
+#define AQUA "\033[36m"
+
 Cgi::Cgi(Connect& connect, Client& client)
 	: __cn(connect), __request(client.rq), __v_envlist(std::vector<std::string>(15, ""))
 {
@@ -137,7 +146,7 @@ int		Cgi::m_cgi_exec()
 	__cn.clients.insert(std::make_pair(pipe_in[WRITE], c1));
 	__cn.clients.insert(std::make_pair(pipe_out[READ], c2));
 	__cn.clients[__cn.curr_event->ident]._stage = WAIT;
-	std::cout << "@@@@@@ tmp buf : " << __cn.clients[__cn.curr_event->ident].tmp_buffer << std::endl;
+	std::cout << "@@@@@@ tmp buf : " << PRPL << __cn.clients[__cn.curr_event->ident].tmp_buffer << NC << std::endl;
 	m_delete();
 	return (0);
 }
