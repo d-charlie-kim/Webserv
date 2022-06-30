@@ -256,6 +256,12 @@ void response(Connect& cn, Client& client, Request& request)
 			return ;
 
 		int file_fd = open(client.rs.file_path.c_str(), O_RDONLY);
+		if (file_fd == -1)
+		{
+			client.respond_msg = client.rs.header + "\r\n\r\n" + cn.default_error_page;
+			client._stage = SEND_RESPONSE;
+			return ;
+		}
 		std::cout << file_fd << " : " << client.rs.file_path << std::endl;
 		change_events(cn.change_list, file_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
 		Client c1;
