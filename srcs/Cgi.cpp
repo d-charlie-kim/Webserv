@@ -22,7 +22,8 @@ Cgi::Cgi(Connect& connect, Client& client)
 	__v_envlist[11] = "SERVER_SOFTWARE=dimteamwebserv";
 	__v_envlist[12] = "REQUEST_URI=" + __requested_uri;
 	__v_envlist[13] = "PATH_INFO=" + __requested_uri;
-	__v_envlist[14] = "SCRIPT_FILENAME=" + __requested_uri; 
+	__v_envlist[14] = "SCRIPT_FILENAME=" + __requested_uri;
+	client.tmp_buffer = __request.body;
 }
 
 Cgi::~Cgi() {}
@@ -136,6 +137,7 @@ int		Cgi::m_cgi_exec()
 	__cn.clients.insert(std::make_pair(pipe_in[WRITE], c1));
 	__cn.clients.insert(std::make_pair(pipe_out[READ], c2));
 	__cn.clients[__cn.curr_event->ident]._stage = WAIT;
+	std::cout << "@@@@@@ tmp buf : " << __cn.clients[__cn.curr_event->ident].tmp_buffer << std::endl;
 	m_delete();
 	return (0);
 }

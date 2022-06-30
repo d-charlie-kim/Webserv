@@ -189,7 +189,7 @@ static void file_and_pipe_write(Connect& cn)
         }
     }
     cn.clients[cn.clients[cn.curr_event->ident].origin_fd].tmp_buffer.clear();
-    if (cn.clients[cn.curr_event->ident]._stage == CGI_WRITE)
+    if (cn.clients[cn.curr_event->ident]._stage != CGI_WRITE)
         cn.clients[cn.clients[cn.curr_event->ident].origin_fd]._stage = SET_RESOURCE;
     std::cout << "client disconnected: " << cn.curr_event->ident<< std::endl;
     disconnect_client(cn.curr_event->ident, cn.clients);

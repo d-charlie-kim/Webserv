@@ -278,7 +278,7 @@ void response(Connect& cn, Client& client, Request& request)
 		}
 		else if (request.is_cgi && !request.status_code)
 		{
-			client.respond_msg = "HTTP/1.1 200 OK";
+			client.respond_msg = "HTTP/1.1 200 OK\r\n";
 			client.respond_msg += client.tmp_buffer;
 			client.is_io_done = false;
 			client._stage = SEND_RESPONSE;
