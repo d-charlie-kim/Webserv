@@ -11,6 +11,7 @@
 #include <sstream>
 #include <unistd.h>
 #include "Server.hpp"
+#include "Connect.hpp"
 
 class Config
 {
@@ -49,6 +50,6 @@ class Config
 		std::vector<Server>&	get_server_list();
 };
 
-void set_default_files(std::map<int, std::pair<std::string, std::string> >& first_line);
+void set_default_files(Connect& cn, std::map<int, std::pair<std::string, std::string> >& first_line);
 
 #endif

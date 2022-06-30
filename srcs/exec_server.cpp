@@ -130,7 +130,7 @@ static void read_data_from_client(Connect& cn)
     else
     {
         buf[n] = 0;
-        cn.clients[cn.curr_event->ident].request_msg += buf;
+        cn.clients[cn.curr_event->ident].request_msg = buf;
         std::cout << YLLW "client " << cn.curr_event->ident << " msg : " NC << cn.clients[cn.curr_event->ident].request_msg << std::endl;
     }
 }
@@ -272,7 +272,7 @@ static void start_server(int& kq, Connect& cn)
 void exec_server(std::vector<Server>& server_list)
 {
     Connect cn;
-    set_default_files(cn.first_line);
+    set_default_files(cn, cn.first_line);
     cn.servers = connect_server(server_list);
 	int kq;
     if ((kq = kqueue()) == -1)
