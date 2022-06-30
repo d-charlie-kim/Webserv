@@ -146,6 +146,12 @@ void		Request_parser::m_unchunk_after_body_clear(bool& is_enough_body_length)
 void	Request_parser::parse_request(Client& client)
 {
 	Server *server = client.server;
+	// url 입력값 없어도 괜찮도록 디폴트 로케이션 설정
+	Location	*location = &(server->default_location);
+	request.url = "/";
+	request.path = "/";
+	request.location = location;
+
 	memset(&request, 0, sizeof(Request));
 	split_request_msg();
 	if (request.status_code)
@@ -162,11 +168,6 @@ void	Request_parser::parse_request(Client& client)
 	__l_line.pop_front();
 
 	// parse location part
-	// url 입력값 없어도 괜찮도록 디폴트 로케이션 설정
-	Location	*location = &(server->default_location);
-	request.url = "/";
-	request.path = "/";
-
 	if (__l_line.size())
 	{
 		// set location & url & path
