@@ -69,7 +69,7 @@ void		Config::m_parse_root(std::list<std::string>& line, Location& loc)
 		loc.root += line.back();
 	}
 	else
-		loc.root += line.back();
+		loc.root = line.back();
 }
 
 void		Config::m_parse_index(std::list<std::string>& line, Location& loc)
