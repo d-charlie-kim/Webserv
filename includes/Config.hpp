@@ -37,6 +37,9 @@ class Config
 		void					m_parse_return(std::list<std::string>& line, Location& loc);
 		void					m_parse_cgi_extension(std::list<std::string>& line, Location& loc);
 		void					m_check_auto_index(Location& loc);
+		void					m_check_default_location(Location& loc);
+		void					m_check_route(std::vector<Location>& locs, std::string route);
+		void					m_check_location_and_get_method(Server& new_server);
 
 	public:
 		Config();
