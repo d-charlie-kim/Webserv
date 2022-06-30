@@ -202,11 +202,11 @@ static void file_and_pipe_write(Connect& cn)
     else if (cn.clients[cn.curr_event->ident]._stage == FILE_WRITE)
         std::cout << "STAGE FILE_WRITE" << std::endl;
     int n = write(cn.curr_event->ident, tmp.c_str(), tmp.size());
+    if (n <= 0)
     {
-        if (n < 0)
-            std::cerr << "file write error!" << std::endl;
         if (!(n == 0 && cn.clients[cn.clients[cn.curr_event->ident].origin_fd].rq.method == GET))
         {
+            std::cerr << "file write error!" << std::endl;
             cn.clients[cn.clients[cn.curr_event->ident].origin_fd].rq.status_code = 500;
             cn.clients[cn.clients[cn.curr_event->ident].origin_fd]._stage = SET_RESOURCE;
             disconnect_client(cn.curr_event->ident, cn.clients);
