@@ -13,5 +13,7 @@ void Client::client_clear()
 	is_io_done = 0;
     origin_fd = 0;
     cgi_pid = 0;
+    Request new_rq;
+    rq = new_rq;
     rs.clear();
 }
