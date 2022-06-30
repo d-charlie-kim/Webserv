@@ -1,4 +1,5 @@
 #include "Config.hpp"
+#include "Connect.hpp"
 
 static void set_first_line(std::map<int, std::pair<std::string, std::string> >& first_line)
 {
@@ -97,8 +98,9 @@ static void set_php_file()
 	wFile.close();
 }
 
-void set_default_files(std::map<int, std::pair<std::string, std::string> >& first_line)
+void set_default_files(Connect& cn, std::map<int, std::pair<std::string, std::string> >& first_line)
 {
+	cn.default_error_page = "<!DOCTYPE html>\r\n<html>\r\n<head>\r\n	<title>Default Error Page</title>\r\n</head>\r\n<body>\r\n	<h1>This is Default error page</h1>\r\n</body>\r\n</html>";
 	set_html_file(first_line);
 	set_php_file();
 }

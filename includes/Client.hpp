@@ -26,7 +26,7 @@ enum Stage
 struct Client
 {
     bool keep;
-	bool is_io;
+	bool is_io_done;
     int origin_fd;
 	pid_t cgi_pid;
     Stage _stage;

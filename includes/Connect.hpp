@@ -21,5 +21,6 @@ struct Connect
     std::map<int, Server> servers;
     std::vector<struct kevent> change_list;
     std::map<int, std::pair<std::string, std::string> > first_line;
+    std::string default_error_page;
 };
 #endif

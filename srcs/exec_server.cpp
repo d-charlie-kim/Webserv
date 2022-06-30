@@ -269,7 +269,7 @@ static void start_server(int& kq, Connect& cn)
 void exec_server(std::vector<Server>& server_list)
 {
     Connect cn;
-    set_default_files(cn.first_line);
+    set_default_files(cn, cn.first_line);
     cn.servers = connect_server(server_list);
 	int kq;
     if ((kq = kqueue()) == -1)

@@ -9,8 +9,8 @@
 void Response::clear()
 {
 	body.clear();
-    file_path.clear();
-    header.clear();
+	file_path.clear();
+	header.clear();
 }
 
 static std::string make_hyper_link(Request& request, std::string path)
@@ -141,24 +141,97 @@ static void method_get(Connect& cn, Request& request, Response& response)
 }
 
 
-// static void method_post(Request&, Response&)
-// {
-
-// }
-
-// static void method_delete(Request&, Response&)
-// {
-
-// }
-
-static void method_exe(Connect& cn, Request& request, Response& response)
+static void method_post(Connect& cn, Request& request, Client& client)
 {
-	if (request.method == GET)
-		method_get(cn, request, response);
-	// else if (request.method == POST)
-	// 	method_post(request, response);
-	// else if (request.method == DELETE)
-	// 	method_delete(request, response);
+	struct stat		status;
+
+	if (stat(request.path.c_str(), &status)) // 존재하지 않는 경로
+		request.status_code = 404;
+	else if (request.is_directory || request.is_cgi) // 디렉토리 이거나 정적 파일이라면
+		request.status_code = 405;
+	else if (!request.content_length)	// POST 요청에는 반드시 body 및 content-length가 필요함, 없을 시 411 length required
+		request.status_code = 411;
+	else if (request.content_length > request.location->client_max_body_size) // 우리가 허용한 body를 넘을 때
+		request.status_code = 413;
+	else
+	{
+		Cgi cgi(cn, client);
+		request.status_code = cgi.m_cgi_exec();
+		/*
+			REVIEW
+			CGI 에서 POST 성공한 body를 뱉는가?
+
+			post 내용이 body로 전달된다면?
+				browser에서 post시 query string 으로 인자 전달
+				curl을 통해서 post 시 body로 전달되는가??
+				파일 업로드 시 query string으로 전달되는가?
+					파일 이름으 확인할 수 있는가?
+
+			정적 파일만 가능하다는 것은 nginx와 같게 만들기 위함인가?
+			모든 POST 요청에서 static file 은 불가한 것인가?
+
+			성공 시 HTTP/1.1 200 OK 헤더 붙여서 줘도 되는가?
+				안된다면 또 한 블럭 추가해야 함.
+		*/
+	}
+}
+
+static void method_delete(Request& request, Client& client)
+{
+	struct stat		status;
+
+	if (stat(request.path.c_str(), &status)) // 존재하지 않는 경로
+		request.status_code = 404;
+	else if (request.is_directory) // 디렉토리
+		request.status_code = 405;
+	else if (request.path.substr(0, 16) != "/cgi-bin/uploads") // DELETE 허용하는 경로가 아닐 때
+		request.status_code = 405;
+	else
+	{
+		std::string path = "";
+		path = "." + request.path;
+		int ret = remove(path.c_str());
+		if (ret)
+			request.status_code = 405;
+		else 
+		{
+			request.status_code = 200; // 200이 아닌 번호를 선택한 경우, respons skip 하는 부분에서 추가해줘야 함.
+			client._stage = SEND_RESPONSE;
+		}
+	}
+	    /*
+        NOTE delete 메서드 처리 후 어떤 응답보낼지 선택가능해보입니다 그냥 204로만 해도 될까요
+        
+            응 답
+        DELETE 메서드를 성공적으로 적용한 후에 사용할 수 있는 응답 상태 코드는 다음과 같이 몇 가지가 있습니다.
+        아마도 명령을 성공적으로 수행할 것 같으나 아직은 실행하지 않은 경우 202 (Accepted) 상태 코드.
+        명령을 수행했고 더 이상 제공할 정보가 없는 경우 204 (No Content) 상태 코드.
+        명령을 수행했고 응답 메시지가 이후의 상태를 설명하는 경우 200 (OK) 상태 코드.
+    */
+
+	/*
+		REVIEW
+
+		DELETE면 return에서 헤더만 주는가?
+		DELETE를 브라우저에서 접근할 수 있는가?
+		curl 에서 접근한다면 return 하면 헤더만 출력되야 하는가?
+
+		우리가 허용하는 경로가 아닐 때와
+		config 파일에서 allow methods에 DELETE를 추가할 경우와
+		충돌된다면?
+
+		단순히 conf 파일에 안 적어주는 것으로 되는가.
+	*/
+}
+
+static void method_exe(Connect& cn, Client& client)
+{
+	if (client.rq.method == GET)
+		method_get(cn, client.rq, client.rs);
+	else if (client.rq.method == POST)
+		method_post(cn, client.rq, client);
+	else if (client.rq.method == DELETE)
+		method_delete(client.rq, client);
 }
 
 static void set_response(Connect& cn, Request& request, Response& response)
@@ -191,7 +264,7 @@ void response(Connect& cn, Client& client, Request& request)
 {
 	if (cn.clients[cn.curr_event->ident]._stage == SET_RESOURCE)
         std::cout << "STAGE SET_RESOURCE" << std::endl; 
-	if (!client.is_io)
+	if (!client.is_io_done)
 	{
 		if (!request.status_code)
 		{
@@ -201,11 +274,11 @@ void response(Connect& cn, Client& client, Request& request)
 				client._stage = SEND_RESPONSE;
 				return ;
 			}
-			method_exe(cn, request, client.rs);
+			method_exe(cn, client);
 		}
 		if (request.is_cgi && !request.status_code)
 		{
-			client.is_io = true;
+			client.is_io_done = true;
 			return ;
 		}
 		set_response(cn, request, client.rs);
@@ -222,14 +295,14 @@ void response(Connect& cn, Client& client, Request& request)
 		client._stage = WAIT;
 
 
-		client.is_io = true;
+		client.is_io_done = true;
 	}
-	else if (client.is_io)
+	else if (client.is_io_done)
 	{
 		if (request.is_cgi && request.status_code) // error.html 읽으러 다시 들어오세요
 		{
 			request.is_cgi = false;
-			client.is_io = false;
+			client.is_io_done = false;
 			client.tmp_buffer.clear();
 			return ;
 		}
@@ -237,7 +310,7 @@ void response(Connect& cn, Client& client, Request& request)
 		{
 			client.respond_msg = "HTTP/1.1 200 OK";
 			client.respond_msg += client.tmp_buffer;
-			client.is_io = false;
+			client.is_io_done = false;
 			client._stage = SEND_RESPONSE;
 			return ;
 		}
@@ -247,7 +320,7 @@ void response(Connect& cn, Client& client, Request& request)
 			client.respond_msg += "Content-Length: " + ft_itoa(client.rs.body.size());
 		client.respond_msg += "\r\n\r\n";
 		client.respond_msg += client.rs.body;
-		client.is_io = false;
+		client.is_io_done = false;
 		client._stage = SEND_RESPONSE;
 	}
 }
