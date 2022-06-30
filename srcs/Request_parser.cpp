@@ -232,8 +232,8 @@ void	Request_parser::parse_request(Client& client)
 		}
 		if (__l_line.front() == "Connection:" && __l_line.size() == 2)
 			request.connection = __l_line.back();
-		if (__l_line.front() == "Content-Type:" && __l_line.size() == 2)
-			request.content_type = __l_line.back();
+		if (__l_line.front() == "Content-Type:" && __l_line.size() == 2 && __l_line.back() == "close")
+			client.keep = false;
 		if (__l_line.front() == "Transfer-Encoding:" && __l_line.size() == 2 && __l_line.back() == "chunked")
 		{
 			m_unchunk_after_body_clear(is_enough_body_length);
