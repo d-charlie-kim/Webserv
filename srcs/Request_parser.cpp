@@ -16,7 +16,6 @@ static int		parse_method(std::string str)
 		if (methods[i] == str)
 		{
 			method |= bit;
-
 		}
 		bit <<= 1;
 	}
@@ -240,8 +239,16 @@ void	Request_parser::m_parse_request_header (Client& client)
 		}
 		if (__l_line.front() == "Connection:" && __l_line.size() == 2 && __l_line.back() == "close")
 			client.keep = false;
-		if (__l_line.front() == "Content-Type:" && __l_line.size() == 2)
-			request.content_type = __l_line.back();
+		if (__l_line.front() == "Content-Type:")
+		{
+			__l_line.pop_front();
+			while (__l_line.size())
+			{
+				request.content_type += __l_line.front();
+				request.content_type += " ";
+				__l_line.pop_front();
+			}
+		}
 		if (__l_line.front() == "Transfer-Encoding:" && __l_line.size() == 2 && __l_line.back() == "chunked")
 		{
 			m_unchunk_after_body_clear(is_enough_body_length);
