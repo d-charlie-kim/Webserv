@@ -71,14 +71,10 @@ std::list<std::string>		split_word(std::string str)
 
 void	Request_parser::split_request_msg()
 {
+	request.body = "";
 	size_t pos = __request_msg.find("\r\n\r\n");
-	if (pos == std::string::npos)
-	{
-		// 헤더 바디 구분 개행이 아예 없어서 400 Bad Request
-		request.status_code = 400;
-		return;
-	}
-	request.body = __request_msg.substr(pos + 4);
+	if (pos != std::string::npos)
+		request.body = __request_msg.substr(pos + 4);
 
 	std::string header = __request_msg.substr(0, pos);
 
@@ -146,7 +142,12 @@ void		Request_parser::m_unchunk_after_body_clear(bool& is_enough_body_length)
 void	Request_parser::parse_request(Client& client)
 {
 	Server *server = client.server;
-	memset(&request, 0, sizeof(Request));
+	// url 입력값 없어도 괜찮도록 디폴트 로케이션 설정
+	Location	*location = &(server->default_location);
+	request.url = "/";
+	request.path = "/";
+	request.location = location;
+
 	split_request_msg();
 	if (request.status_code)
 		return ;
@@ -162,15 +163,15 @@ void	Request_parser::parse_request(Client& client)
 	__l_line.pop_front();
 
 	// parse location part
-	// url 입력값 없어도 괜찮도록 디폴트 로케이션 설정
-	Location	*location = &(server->default_location);
-	request.url = "/";
-	request.path = "/";
-
 	if (__l_line.size())
 	{
 		// set location & url & path
 		request.url = __l_line.front();
+		if (request.url.find(":") != std::string::npos)
+		{
+			request.status_code = 400;
+			return ;
+		}
 		request.path = request.url.substr(0,request.url.find("?"));
 		location = search_location(request.path, server->location);
 		__l_line.pop_front();	
@@ -186,7 +187,7 @@ void	Request_parser::parse_request(Client& client)
 	
 	// 본격적인 메소드 해석
 	int method = parse_method(method_str);
-	if (!method)
+	if (!method || (method & POST && !request.body.size()))
 	{
 		request.status_code = 400;
 		return ;
@@ -231,8 +232,8 @@ void	Request_parser::parse_request(Client& client)
 		}
 		if (__l_line.front() == "Connection:" && __l_line.size() == 2)
 			request.connection = __l_line.back();
-		if (__l_line.front() == "Content-Type:" && __l_line.size() == 2)
-			request.content_type = __l_line.back();
+		if (__l_line.front() == "Content-Type:" && __l_line.size() == 2 && __l_line.back() == "close")
+			client.keep = false;
 		if (__l_line.front() == "Transfer-Encoding:" && __l_line.size() == 2 && __l_line.back() == "chunked")
 		{
 			m_unchunk_after_body_clear(is_enough_body_length);
@@ -262,7 +263,8 @@ void request_msg_parsing(Client& client)
 		}
 		size_t		size_to_copy = client.rq.body.size() - client.rq.content_length;
 		client.rq.body += client.request_msg.substr(0, size_to_copy);
-		client._stage = SET_RESOURCE;
+		if (client.rq.body.size() >= static_cast<size_t>(client.rq.content_length))
+			client._stage = SET_RESOURCE;
 		return ;
 	}
 	Request_parser		parser(client.request_msg);
