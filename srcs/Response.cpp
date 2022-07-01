@@ -187,6 +187,9 @@ static void method_delete(Request& request, Client& client)
 		{
 			request.status_code = 200; // 200이 아닌 번호를 선택한 경우, respons skip 하는 부분에서 추가해줘야 함.
 			client.rs.body = "<!DOCTYPE html>\r\n<html>\r\n<head>\r\n	<title>Delete request Done</title>\r\n</head>\r\n<body>\r\n	<h1>Your Delete request Done!</h1>\r\n</body>\r\n</html>\r\n";
+			client.rs.header = "HTTP/1.1 200 OK\r\nContent-Length: ";
+			client.rs.header += ft_itoa(client.rs.body.size());
+			client.respond_msg = client.rs.header + "\r\n\r\n" + client.rs.body;
 			client._stage = SEND_RESPONSE;
 		}
 	}
