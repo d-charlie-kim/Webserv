@@ -130,7 +130,7 @@ static void read_data_from_client(Connect& cn)
     else
     {
         buf[n] = 0;
-        cn.clients[cn.curr_event->ident].request_msg = buf;
+        cn.clients[cn.curr_event->ident].request_msg.append(buf, n);
         std::cout << YLLW "client " << cn.curr_event->ident << " msg : " NC << cn.clients[cn.curr_event->ident].request_msg << std::endl;
     }
 }

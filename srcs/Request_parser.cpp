@@ -141,6 +141,14 @@ void		Request_parser::m_unchunk_after_body_clear(bool& is_enough_body_length)
 
 void	Request_parser::parse_request(Client& client)
 {
+	size_t pos = __request_msg.find("\r\n\r\n");
+	if (pos == std::string::npos)
+		return ;
+	m_parse_request_header(client);
+}
+
+void	Request_parser::m_parse_request_header (Client& client)
+{
 	Server *server = client.server;
 	// url 입력값 없어도 괜찮도록 디폴트 로케이션 설정
 	Location	*location = &(server->default_location);
@@ -187,7 +195,7 @@ void	Request_parser::parse_request(Client& client)
 	
 	// 본격적인 메소드 해석
 	int method = parse_method(method_str);
-	if (!method || (method & POST && !request.body.size()))
+	if (!method)
 	{
 		request.status_code = 400;
 		return ;
@@ -253,20 +261,24 @@ void request_msg_parsing(Client& client)
 {
 	if(client.rq.content_length)
 	{
+		size_t			body_start_pos = client.request_msg.find("\r\n\r\n") + 4;
+		std::string		body = client.request_msg.substr(body_start_pos);
+		
 		if (client.rq.is_chunk_body)
 		{
-			std::list<std::string> list = split_line(client.request_msg);
+			std::list<std::string> list = split_line(body);
+			client.rq.body.clear();
 			size_t last_length = unchunk_data(list, client.rq.body, client.rq.status_code);
 			if (client.rq.status_code || last_length == 0)
 				client._stage = SET_RESOURCE;
 			return ;
 		}
-		size_t		size_to_copy = client.rq.body.size() - client.rq.content_length;
-		client.rq.body += client.request_msg.substr(0, size_to_copy);
-		if (client.rq.body.size() >= static_cast<size_t>(client.rq.content_length))
+		client.rq.body = body;
+		if (body.size() == static_cast<size_t>(client.rq.content_length))
 			client._stage = SET_RESOURCE;
 		return ;
 	}
+	// 초기 파싱
 	Request_parser		parser(client.request_msg);
 	parser.parse_request(client);
 	client.rq = parser.request;
