@@ -33,13 +33,17 @@ static std::string make_hyper_link(Request& request, std::string path)
 		if (!file)
 			break ;
 		if (file->d_name == dot)
-		{
-			
 			continue ;
-		}
 		else if (file->d_name == dotdot)
 		{
-
+			a_tag += "<a href=\"";
+			a_tag += request.path;
+			if (a_tag[a_tag.size() - 1] != '/')
+				a_tag += "/";
+			a_tag += "..";
+			a_tag += "\">";
+			a_tag += "..";
+			a_tag += "</a>\r\n";
 			continue ;
 		}
 		a_tag += "<a href=\"";
@@ -49,7 +53,7 @@ static std::string make_hyper_link(Request& request, std::string path)
 		a_tag += file->d_name;
 		a_tag += "\">";
 		a_tag += file->d_name;
-		a_tag += "</a>\n";
+		a_tag += "</a>\r\n";
 	}
 	return a_tag;
 }
@@ -83,7 +87,8 @@ static void make_auto_index_page(Client& client, Request& request, Response& res
 	response.body += auto_index.substr(0, index) + read_dir;
 	response.body += auto_index.substr(index + 2) + "\r\n";
 
-	response.header = "HTTP/1.1 200 OK";
+	response.header = "HTTP/1.1 200 OK\r\nContent-Length: ";
+	response.header += ft_itoa(response.body.size());
 	client.respond_msg = response.header + "\r\n\r\n" + response.body;
 	client._stage = SEND_RESPONSE;
 }
@@ -143,8 +148,9 @@ static void method_get(Connect& cn, Request& request, Response& response)
 static void method_post(Connect& cn, Request& request, Client& client)
 {
 	struct stat		status;
+	std::string path = request.location->root + request.path;
 
-	if (stat(request.path.c_str(), &status)) // 존재하지 않는 경로
+	if (stat(path.c_str(), &status)) // 존재하지 않는 경로
 		request.status_code = 404;
 	else if (request.is_directory || request.is_cgi) // 디렉토리 이거나 정적 파일이라면
 		request.status_code = 405;
@@ -162,8 +168,9 @@ static void method_post(Connect& cn, Request& request, Client& client)
 static void method_delete(Request& request, Client& client)
 {
 	struct stat		status;
+	std::string path = request.location->root + request.path;
 
-	if (stat(request.path.c_str(), &status)) // 존재하지 않는 경로
+	if (stat(path.c_str(), &status)) // 존재하지 않는 경로
 		request.status_code = 404;
 	else if (request.is_directory) // 디렉토리
 		request.status_code = 405;
@@ -171,8 +178,6 @@ static void method_delete(Request& request, Client& client)
 		request.status_code = 405;
 	else
 	{
-		std::string path = "";
-		path = "." + request.path;
 		int ret = remove(path.c_str());
 		if (ret)
 			request.status_code = 405;
@@ -256,6 +261,12 @@ void response(Connect& cn, Client& client, Request& request)
 			return ;
 
 		int file_fd = open(client.rs.file_path.c_str(), O_RDONLY);
+		if (file_fd == -1)
+		{
+			client.respond_msg = client.rs.header + "\r\n\r\n" + cn.default_error_page;
+			client._stage = SEND_RESPONSE;
+			return ;
+		}
 		std::cout << file_fd << " : " << client.rs.file_path << std::endl;
 		change_events(cn.change_list, file_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
 		Client c1;
@@ -286,8 +297,7 @@ void response(Connect& cn, Client& client, Request& request)
 		}
 		client.rs.body = client.tmp_buffer;
 		client.respond_msg = client.rs.header + "\r\n";
-		if (request.method == GET)
-			client.respond_msg += "Content-Length: " + ft_itoa(client.rs.body.size());
+		client.respond_msg += "Content-Length: " + ft_itoa(client.rs.body.size());
 		client.respond_msg += "\r\n\r\n";
 		client.respond_msg += client.rs.body;
 		client.is_io_done = false;
