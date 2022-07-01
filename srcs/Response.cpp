@@ -33,13 +33,17 @@ static std::string make_hyper_link(Request& request, std::string path)
 		if (!file)
 			break ;
 		if (file->d_name == dot)
-		{
-			
 			continue ;
-		}
 		else if (file->d_name == dotdot)
 		{
-
+			a_tag += "<a href=\"";
+			a_tag += request.path;
+			if (a_tag[a_tag.size() - 1] != '/')
+				a_tag += "/";
+			a_tag += "..";
+			a_tag += "\">";
+			a_tag += "..";
+			a_tag += "</a>\r\n";
 			continue ;
 		}
 		a_tag += "<a href=\"";
@@ -49,7 +53,7 @@ static std::string make_hyper_link(Request& request, std::string path)
 		a_tag += file->d_name;
 		a_tag += "\">";
 		a_tag += file->d_name;
-		a_tag += "</a>\n";
+		a_tag += "</a>\r\n";
 	}
 	return a_tag;
 }
@@ -83,7 +87,8 @@ static void make_auto_index_page(Client& client, Request& request, Response& res
 	response.body += auto_index.substr(0, index) + read_dir;
 	response.body += auto_index.substr(index + 2) + "\r\n";
 
-	response.header = "HTTP/1.1 200 OK";
+	response.header = "HTTP/1.1 200 OK\r\nContent-Length: ";
+	response.header += ft_itoa(response.body.size());
 	client.respond_msg = response.header + "\r\n\r\n" + response.body;
 	client._stage = SEND_RESPONSE;
 }

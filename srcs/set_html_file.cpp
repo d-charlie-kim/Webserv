@@ -66,14 +66,25 @@ static void set_html_file(std::map<int, std::pair<std::string, std::string> >& f
 	wFile.open("./www/index.html");
 	if (wFile.fail())
 		throw std::out_of_range("Error, Fail to set HTML file");
-	wFile << "<!DOCTYPE html>\r\n<html>\r\n<head>\r\n<title>Welcome to Webserv!</title>\r\n<style>\r\nhtml { color-scheme: light dark; }\r\nbody { width: 35em; margin: 0 auto;\r\nfont-family: Tahoma, Verdana, Arial, sans-serif; }\r\nh2 { color:darksalmon; }\r\n</style>\r\n</head>\r\n<body>\r\n<h1>Welcome to Webserv!</h1>\r\n<h2>First index page</h2>\r\n<p>If you see this page, the Webserv is successfully installed and\r\nworking. Further configuration is required.</p>\r\n\r\n<p>For online documentation and support please refer to\r\n<a href=\"http://nginx.org/\">nginx.org</a>.<br/>\r\nCommercial support is available at\r\n<a href=\"http://nginx.com/\">nginx.com</a>.</p>\r\n\r\n<p><em>Thank you for using webserv.</em></p>\r\n\r\n<hr>\r\n<p>1. Receive data with <em>\"GET\"</em> method</p>\r\n<p>-> Data that may be exposed as URL</p>\r\n<form action=\"./cgi-bin/get_name.php\" method=\"get\">\r\n	First Name: <input type = \"text\" name = \"first_name\"> <br />\r\n	Last Name: <input type = \"text\" name = \"last_name\" />\r\n	<input type = \"submit\" value = \"Submit\" />\r\n</form>\r\n\r\n<hr>\r\n<p>2. Receive data with <em>\"POST\"</em> method</p>\r\n<p>-> Data that should not be exposed as URL</p>\r\n<form action=\"./cgi-bin/get_profile.php\" method=\"post\">\r\n	ID : <input type = \"text\" name = \"ID\"> <br />\r\n	PW : <input type = \"text\" name = \"PW\" />\r\n	<input type = \"submit\" value = \"Submit\" />\r\n</form>\r\n\r\n<hr>\r\n<p>3. Uploade File</p>\r\n<form action=\"/cgi-bin/upload.php\" method=\"post\" enctype=\"multipart/form-data\">\r\n	Select image to upload:\r\n	<input type=\"file\" name=\"fileToUpload\" id=\"fileToUpload\">\r\n	<input type=\"submit\" value=\"Upload Image\" name=\"submit\">\r\n</form>\r\n\r\n</body>\r\n</html>\r\n";
+	wFile << "<!DOCTYPE html>\r\n<html>\r\n<head>\r\n<title>Index page</title>\r\n</head>\r\n<body>\r\n<h1>This is Index page</h1>\r\n<h3>To test autoindex, Turn off the Index or put wrong Index on Configure file</h3>\r\n</body>\r\n</html>\r\n";
 	wFile.close();
 
-	wFile.open("./www/cgi_test.html");
+	wFile.open("./index.html");
 	if (wFile.fail())
 		throw std::out_of_range("Error, Fail to set HTML file");
+
 	wFile << "<!DOCTYPE html>\r\n<head>\r\n	<title>PHP Test</title>\r\n	<style>\r\n		body {margin : auto 40%;}\r\n		h1 {font-size : 50px;}\r\n	</style>\r\n</head>\r\n<body>\r\n	<h1> CGI Test</h1>\r\n	<h2>GET Test</h2>\r\n	<form action=\"/cgi-bin/get.php\" method=\"get\">\r\n		<p>Input 1 : <input type=\"text\" name=\"first\"> </p>\r\n		<p>Input 2 : <input type=\"text\" name=\"second\"> </p>\r\n		<input type=\"submit\" value=\"Submit\">\r\n	</form>\r\n	<h2>POST Test - text</h2>\r\n	<form action=\"/cgi-bin/post_text.php\" method=\"post\">\r\n		<p>Input 1 : <input type=\"text\" name=\"first\"> </p>\r\n		<p>Input 2 : <input type=\"text\" name=\"second\"> </p>\r\n		<input type=\"submit\" value=\"Submit\">\r\n	</form>\r\n	<h2>POST Test - file</h2>\r\n	<form action=\"/cgi-bin/post_file.php\" method=\"post\" enctype=\"multipart/form-data\">\r\n		<p>Image to upload : <input type=\"file\" name=\"fileToUpload\"> </p>\r\n	<input type=\"submit\" value=\"Submit\">\r\n	</form>\r\n</body>\r\n</html>";
 	wFile.close();
+	
+	wFile.open("./test/index.html");
+	if (wFile.fail())
+		throw std::out_of_range("Error, Fail to set HTML file");
+	wFile << "<!DOCTYPE html>\r\n<html>\r\n<head>\r\n<title>Index page</title>\r\n</head>\r\n<body>\r\n<h1>This is Index page</h1>\r\n<h3>To test autoindex, Turn off the Index or put wrong Index on Configure file</h3>\r\n</body>\r\n</html>\r\n";
+	wFile.close();
+
+	wFile.open("./cgi-bin/cgi_test.html");
+	if (wFile.fail())
+		throw std::out_of_range("Error, Fail to set HTML file");
 }
 
 static void set_php_file()
