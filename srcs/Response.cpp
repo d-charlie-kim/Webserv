@@ -152,7 +152,7 @@ static void method_post(Connect& cn, Request& request, Client& client)
 
 	if (stat(path.c_str(), &status)) // 존재하지 않는 경로
 		request.status_code = 404;
-	else if (request.is_directory || request.is_cgi) // 디렉토리 이거나 정적 파일이라면
+	else if (request.is_directory || !request.is_cgi) // 디렉토리 이거나 정적 파일이라면
 		request.status_code = 405;
 	else if (!request.content_length)	// POST 요청에는 반드시 body 및 content-length가 필요함, 없을 시 411 length required
 		request.status_code = 411;

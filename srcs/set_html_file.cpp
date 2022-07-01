@@ -84,6 +84,8 @@ static void set_html_file(std::map<int, std::pair<std::string, std::string> >& f
 	wFile.open("./cgi-bin/cgi_test.html");
 	if (wFile.fail())
 		throw std::out_of_range("Error, Fail to set HTML file");
+	wFile << "<!DOCTYPE html>\r\n<head>\r\n	<title>PHP Test</title>\r\n	<style>\r\n		body {margin : auto 40% 40%;}\r\n		h1 {font-size : 50px;}\r\n	</style>\r\n</head>\r\n<body>\r\n	<h1> CGI Test</h1>\r\n	<hr>\r\n	<h2>GET Test</h2>\r\n	<form action=\"/cgi-bin/get.php\" method=\"get\">\r\n		<p>Input 1 : <input type=\"text\" name=\"first\"> </p>\r\n		<p>Input 2 : <input type=\"text\" name=\"second\"> </p>\r\n		<input type=\"submit\" value=\"Submit\">\r\n	</form>\r\n	<h2>POST Test - text</h2>\r\n	<form action=\"/cgi-bin/post_text.php\" method=\"post\">\r\n		<p>Input 1 : <input type=\"text\" name=\"first\"> </p>\r\n		<p>Input 2 : <input type=\"text\" name=\"second\"> </p>\r\n		<input type=\"submit\" value=\"Submit\">\r\n	</form>\r\n	<h2>POST Test - file</h2>\r\n	<form action=\"/cgi-bin/post_file.php\" method=\"post\" enctype=\"multipart/form-data\">\r\n		<p>Image to upload : <input type=\"file\" name=\"fileToUpload\"> </p>\r\n	<input type=\"submit\" value=\"Submit\">\r\n	</form>\r\n</body>\r\n</html>\r\n";
+	wFile.close();
 }
 
 static void set_php_file()
@@ -104,13 +106,13 @@ static void set_php_file()
 	wFile.open("./cgi-bin/post_text.php");
 	if (wFile.fail())
 		throw std::out_of_range("Error, Fail to set PHP file");
-	wFile << "<?php\r\n$body = \"<!DOCTYPE html>\\n\";\r\n$body .= \"<head>\\n\";\r\n$body .= \"<title>PHP POST-text Test Result</title>\\n\";\r\n$body .= \"</head>\\n\";\r\n$body .= \"<body>\\n\";\r\n$body .= \"<h1>PHP POST Test - text Result</h1>\\n\";\r\nif (!isset($_REQUEST[\"first\"]))\r\n	$body .= \"No first input<p> \\n\";\r\nelse\r\n{\r\n	$body .= \"<p>First input : [ \";\r\n	$body .= $_REQUEST[\"first\"];\r\n	$body .= \" ]</p>\";\r\n}\r\nif (!isset($_REQUEST[\"first\"]))\r\n	$body .= \"No second input<p> \\n\";\r\nelse\r\n{\r\n	$body .= \"<p>Second input : [ \";\r\n	$body .= $_REQUEST[\"second\"];\r\n	$body .= \" ]</p>\";\r\n}\r\n$body .= \"</body>\\n\";\r\n$body .= \"</html>\\n\";\r\n$b_len = strlen($body);\r\nheader(\"HTTP/1.1 200 OK\\r\\n\");\r\nheader(\"Content-Length: $b_len\\r\\n\");\r\necho $body;\r\n?>";
+	wFile << "<?php\r\n$body = \"<!DOCTYPE html>\\n\";\r\n$body .= \"<head>\\n\";\r\n$body .= \"<title>PHP POST-text Test Result</title>\\n\";\r\n$body .= \"</head>\\n\";\r\n$body .= \"<body>\\n\";\r\n$body .= \"<h1>PHP POST Test - text Result</h1>\\n\";\r\nif (!isset($_REQUEST[\"first\"]))\r\n	$body .= \"No first input<p> \\n\";\r\nelse\r\n{\r\n	$body .= \"<p>First input : [ \";\r\n	$body .= $_REQUEST[\"first\"];\r\n	$body .= \" ]</p>\";\r\n}\r\nif (!isset($_REQUEST[\"second\"]))\r\n	$body .= \"No second input<p> \\n\";\r\nelse\r\n{\r\n	$body .= \"<p>Second input : [ \";\r\n	$body .= $_REQUEST[\"second\"];\r\n	$body .= \" ]</p>\";\r\n}\r\n$body .= \"</body>\\n\";\r\n$body .= \"</html>\\n\";\r\n$b_len = strlen($body);\r\nheader(\"HTTP/1.1 200 OK\\r\\n\");\r\nheader(\"Content-Length: $b_len\\r\\n\");\r\necho $body;\r\n?>";
 	wFile.close();
 }
 
 void set_default_files(Connect& cn, std::map<int, std::pair<std::string, std::string> >& first_line)
 {
-	cn.default_error_page = "<!DOCTYPE html>\r\n<html>\r\n<head>\r\n	<title>Default Error Page</title>\r\n</head>\r\n<body>\r\n	<h1>This is Default error page</h1>\r\n</body>\r\n</html>";
+	cn.default_error_page = "<!DOCTYPE html>\r\n<html>\r\n<head>\r\n	<title>Default Error Page</title>\r\n</head>\r\n<body>\r\n	<h1>This is Default error page</h1>\r\n</body>\r\n</html>\r\n";
 	set_html_file(first_line);
 	set_php_file();
 }
