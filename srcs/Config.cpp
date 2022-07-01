@@ -68,6 +68,8 @@ void		Config::m_parse_root(std::list<std::string>& line, Location& loc)
 	}
 	else
 		loc.root = line.back();
+	if (loc.root[loc.root.size() - 1] == '/')
+		loc.root = loc.root.substr(0, loc.root.size() - 1);
 }
 
 void		Config::m_parse_index(std::list<std::string>& line, Location& loc)

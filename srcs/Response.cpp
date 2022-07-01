@@ -105,6 +105,8 @@ static void method_get(Connect& cn, Request& request, Response& response)
 	else if (request.is_directory) // directory 일때 (파일이 아닐 때)
 	{
 		check_route = request.location->root + request.path; // root + (url에서 ? 앞부분) 이 유효한지만 체크 (파일 열때랑 동일)
+		if (check_route[check_route.size() - 1] != '/')
+			check_route += "/";
 		test_fs.open(check_route);
 		if (!test_fs.is_open())
 			request.status_code = 404;
