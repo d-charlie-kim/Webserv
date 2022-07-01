@@ -46,16 +46,14 @@ void		Config::m_parse_listen(Server& new_server, std::list<std::string>& line)
 	if (iss.fail() || !iss.eof() || port < 0 || port > 49151) // atoi 로는 에러가 나서 0이 return 된건지, 원래 값이 0인건지 구분할 수 없음. 그래서 stringstream 사용
 		throw std::invalid_argument("Invalid config file : Port number is incorrect");
 	new_server.listen.second = port;
-	line = m_next_line(0);
 }
 
 void		Config::m_parse_server_name(Server& new_server, std::list<std::string>& line)
 {
-	if (line.size() != 1)
+	if (line.size() != 2)
 		throw std::invalid_argument("Invalid config file : The number of server name arguments is incorrect");
 	line.pop_front();
 	new_server.server_name = line.front();
-	line = m_next_line(0);
 }
 
 void		Config::m_parse_root(std::list<std::string>& line, Location& loc)
@@ -204,7 +202,7 @@ Location	Config::m_parse_location(std::list<std::string>& line, Location& loc, S
 		else if (line.front() == "return" && __s_brace.size() == 2)
 			m_parse_return(line, loc);
 		else
-			throw std::invalid_argument("Invalid config file : This argument not allowed" + line.front());
+			throw std::invalid_argument("Invalid config file : This argument not allowed '" + line.front() + "'");
 		line = m_next_line(0);
 	}
 	return loc;
