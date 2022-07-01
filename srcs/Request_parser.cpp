@@ -245,7 +245,8 @@ void	Request_parser::m_parse_request_header (Client& client)
 			while (__l_line.size())
 			{
 				request.content_type += __l_line.front();
-				request.content_type += " ";
+				if (__l_line.size() > 2)
+					request.content_type += " ";
 				__l_line.pop_front();
 			}
 		}
