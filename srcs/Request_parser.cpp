@@ -226,8 +226,6 @@ void	Request_parser::m_parse_request_header (Client& client)
 	// post 메소드가 아니면 항상 true
 	bool is_enough_body_length = true;
 	
-	__l_line = m_next_line();
-
 	while (__l_file.size() > 1)
 	{
 		__l_line = m_next_line();
