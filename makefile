@@ -28,9 +28,7 @@ clean:
 fclean: clean
 	$(RM) $(NAME)
 	$(RM) -r www
-	$(RM) -r cgi-bin/uploads
-	$(RM) -r cgi-bin/*.php
-	$(RM) -r cgi-bin/cgi_test.html
+	$(RM) -r cgi-bin
 	$(RM) -r test
 	$(RM) index.html
 

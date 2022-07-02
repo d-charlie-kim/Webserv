@@ -152,18 +152,41 @@ static void method_post(Connect& cn, Request& request, Client& client)
 	struct stat		status;
 	std::string path = request.location->root + request.path;
 
-	if (stat(path.c_str(), &status)) // 존재하지 않는 경로
-		request.status_code = 404;
-	else if (request.is_directory || !request.is_cgi) // 디렉토리 이거나 정적 파일이라면
+	if (request.is_directory) // 디렉토리라면
 		request.status_code = 405;
 	else if (!request.content_length)	// POST 요청에는 반드시 body 및 content-length가 필요함, 없을 시 411 length required
 		request.status_code = 411;
 	else if (request.content_length > request.location->client_max_body_size) // 우리가 허용한 body를 넘을 때
 		request.status_code = 413;
-	else
+	else if (request.is_cgi) // cgi 라면
 	{
 		Cgi cgi(cn, client);
 		request.status_code = cgi.m_cgi_exec();
+	}
+	else // 아니면 일반 POST
+	{
+		if (stat(path.c_str(), &status))
+			request.status_code = 201; //없어서 CREATED
+		else
+		{
+			request.status_code = 200; //있어서 OK
+			client.rs.file_path = cn.first_line[200].second;
+		}
+		int file_fd = open(path.c_str(), O_RDWR|O_CREAT|O_APPEND, 0644);
+		if (file_fd == -1)
+		{
+			request.status_code = 400;
+			client._stage = SET_RESOURCE;
+			return ;
+		}
+		std::cout << file_fd << " : " << path << std::endl;
+		change_events(cn.change_list, file_fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
+		Client c1;
+		c1.origin_fd = cn.curr_event->ident;
+		c1._stage = FILE_WRITE;
+		client.tmp_buffer = client.rq.body;
+		cn.clients.insert(std::make_pair(file_fd, c1));
+		client._stage = WAIT;
 	}
 }
 
@@ -175,8 +198,6 @@ static void method_delete(Request& request, Client& client)
 	if (stat(path.c_str(), &status)) // 존재하지 않는 경로
 		request.status_code = 404;
 	else if (request.is_directory) // 디렉토리
-		request.status_code = 405;
-	else if (request.path.substr(0, 16) != "/cgi-bin/uploads") // DELETE 허용하는 경로가 아닐 때
 		request.status_code = 405;
 	else
 	{
@@ -262,7 +283,7 @@ void response(Connect& cn, Client& client, Request& request)
 			return ;
 		}
 		set_response(cn, request, client.rs);
-		if(client._stage == SEND_RESPONSE)
+		if(client._stage == SEND_RESPONSE || client._stage == WAIT)
 			return ;
 
 		int file_fd = open(client.rs.file_path.c_str(), O_RDONLY);
@@ -279,8 +300,6 @@ void response(Connect& cn, Client& client, Request& request)
 		c1._stage = FILE_READ;
 		cn.clients.insert(std::make_pair(file_fd, c1));
 		client._stage = WAIT;
-
-
 		client.is_io_done = true;
 	}
 	else if (client.is_io_done)
