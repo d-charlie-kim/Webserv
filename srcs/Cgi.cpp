@@ -46,14 +46,14 @@ std::string	Cgi::m_get_cwd()
 
 std::string Cgi::m_get_filepath()
 {
-	if (m_get_method(__request.method) == "POST")
+	if (m_get_method(__request.method) == "POST" ||  __request.url.find('?') == std::string::npos)
 		return (__request.url);
 	return (__request.url.substr(0, __request.url.find_last_of('?')));
 }
 
 std::string Cgi::m_get_query_string()
 {
-	if (m_get_method(__request.method) == "POST")
+	if (m_get_method(__request.method) == "POST" || __request.url.find('?') == std::string::npos)
 		return ("");
 	return (__request.url.substr(__request.url.find_last_of('?') + 1));
 }
@@ -85,7 +85,9 @@ void	Cgi::m_set_env()
 
 void	Cgi::m_set_argv()
 {
-	std::string cgi_path = __cwd + "/cgi-bin/php-cgi"; //cgi exec 변경
+	std::string cgi_path = __cwd + "/php-cgi"; //cgi exec 변경
+	if (__request.location->cgi == ".bla")
+		cgi_path = __cwd + "cgi-bin/cgi-tester";
 	__argv[0] = new char[__cwd.size() + cgi_path.size() + 1];
 	strcpy(__argv[0], cgi_path.c_str());
 	__argv[0][__cwd.size() + cgi_path.size()] = 0;
@@ -146,7 +148,7 @@ int		Cgi::m_cgi_exec()
 	__cn.clients.insert(std::make_pair(pipe_in[WRITE], c1));
 	__cn.clients.insert(std::make_pair(pipe_out[READ], c2));
 	__cn.clients[__cn.curr_event->ident]._stage = WAIT;
-	std::cout << "@@@@@@ tmp buf : " << PRPL << __cn.clients[__cn.curr_event->ident].tmp_buffer << NC << std::endl;
+	std::cout << "@@@@@@ tmp buf in cgi : " << PRPL << __cn.clients[__cn.curr_event->ident].tmp_buffer << NC << std::endl;
 	m_delete();
 	return (0);
 }
