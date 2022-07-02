@@ -236,12 +236,8 @@ void	Request_parser::m_parse_request_header (Client& client)
 			request.content_length = std::atoi(__l_line.back().c_str());
 			if(request.content_length > static_cast<int>(request.body.size()))
 				is_enough_body_length = false;
-			// if (request.content_length < request.body.size())
-			// {
-			// 	// NOTE 만약 이런 경우가 있으면 저장해뒀다가 다음 메세지로 인식해야 하는 거 아닐까요 일단 보류
-			// 	size_t size_to_remove = request.body.size() - request.content_length;
-			// 	request.body = request.body.substr(0, request.content_length);
-			// }
+			if (request.content_length < static_cast<int>(request.body.size()))
+				request.body = request.body.substr(0, request.content_length);
 		}
 		if (transform_tolower(__l_line.front()) == "connection:" && __l_line.size() == 2 && __l_line.back() == "close")
 			client.keep = false;
@@ -288,8 +284,10 @@ void request_msg_parsing(Client& client)
 			return ;
 		}
 		client.rq.body = body;
-		if (body.size() == static_cast<size_t>(client.rq.content_length))
+		if (body.size() >= static_cast<size_t>(client.rq.content_length))
 			client._stage = SET_RESOURCE;
+		if (body.size() > static_cast<size_t>(client.rq.content_length))
+			client.rq.body = body.substr(0, client.rq.content_length);
 		return ;
 	}
 	// 초기 파싱
