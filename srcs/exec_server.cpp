@@ -166,7 +166,7 @@ static void file_and_pipe_read(Connect& cn)
                 return ;
             }
             buf[n] = 0;
-            cn.clients[cn.clients[cn.curr_event->ident].origin_fd].tmp_buffer += buf;
+            cn.clients[cn.clients[cn.curr_event->ident].origin_fd].tmp_buffer.append(buf, n);
         }
         cn.clients[cn.clients[cn.curr_event->ident].origin_fd]._stage = SET_RESOURCE;
         disconnect_client(cn.curr_event->ident, cn.clients);
@@ -187,7 +187,7 @@ static void file_and_pipe_read(Connect& cn)
             return ;
         }
         buf[n] = 0;
-        cn.clients[cn.clients[cn.curr_event->ident].origin_fd].tmp_buffer += buf;
+        cn.clients[cn.clients[cn.curr_event->ident].origin_fd].tmp_buffer.append(buf, n);
         cn.clients[cn.clients[cn.curr_event->ident].origin_fd]._stage = SET_RESOURCE;
         disconnect_client(cn.curr_event->ident, cn.clients);
     }
