@@ -27,7 +27,7 @@ Cgi::Cgi(Connect& connect, Client& client)
 	__v_envlist[7] = "SCRIPT_NAME=" + __filepath;
 	__v_envlist[8] = "SERVER_NAME=" + client.server->listen.first;
 	__v_envlist[9] = "SERVER_PORT=" + ft_itoa(client.server->listen.second);
-	__v_envlist[10] = "SERVER_PROTOCOL==HTTP/1.1";
+	__v_envlist[10] = "SERVER_PROTOCOL=HTTP/1.1";
 	__v_envlist[11] = "SERVER_SOFTWARE=dimteamwebserv";
 	__v_envlist[12] = "REQUEST_URI=" + __requested_uri;
 	__v_envlist[13] = "PATH_INFO=" + __requested_uri;
@@ -87,10 +87,10 @@ void	Cgi::m_set_argv()
 {
 	std::string cgi_path = __cwd + "/php-cgi"; //cgi exec 변경
 	if (__request.location->cgi == ".bla")
-		cgi_path = __cwd + "cgi-bin/cgi-tester";
-	__argv[0] = new char[__cwd.size() + cgi_path.size() + 1];
+		cgi_path = __cwd + "/cgi-bin/cgi_tester";
+	__argv[0] = new char[cgi_path.size() + 1];
 	strcpy(__argv[0], cgi_path.c_str());
-	__argv[0][__cwd.size() + cgi_path.size()] = 0;
+	__argv[0][cgi_path.size()] = 0;
 	__argv[1] = new char[__requested_uri.size() + 1];
 	strcpy(__argv[1], __requested_uri.c_str());
 	__argv[1][__requested_uri.size()] = 0;
