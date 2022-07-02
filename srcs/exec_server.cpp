@@ -206,7 +206,7 @@ static void file_and_pipe_write(Connect& cn)
     {
         if (!(n == 0 && cn.clients[cn.clients[cn.curr_event->ident].origin_fd].rq.method == GET))
         {
-            std::cerr << "file write error!" << std::endl;
+            std::cerr << "file write error! : " << n << std::endl;
             cn.clients[cn.clients[cn.curr_event->ident].origin_fd].rq.status_code = 500;
             cn.clients[cn.clients[cn.curr_event->ident].origin_fd]._stage = SET_RESOURCE;
             disconnect_client(cn.curr_event->ident, cn.clients);
