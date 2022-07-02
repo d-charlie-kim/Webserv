@@ -283,7 +283,7 @@ void response(Connect& cn, Client& client, Request& request)
 			return ;
 		}
 		set_response(cn, request, client.rs);
-		if(client._stage == SEND_RESPONSE || client._stage == FILE_WRITE)
+		if(client._stage == SEND_RESPONSE || client._stage == WAIT)
 			return ;
 
 		int file_fd = open(client.rs.file_path.c_str(), O_RDONLY);
