@@ -1,4 +1,5 @@
 *.o
+*.html
 
 www
 cgi-bin/*.php

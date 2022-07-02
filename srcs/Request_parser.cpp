@@ -9,14 +9,12 @@ static int		parse_method(std::string str)
 {
 	int	method = 0;
 
-	const char *methods[3] = {"GET", "POST", "DELETE"};
+	const char *methods[9] = {"GET", "POST", "DELETE", "HEAD", "PUT", "OPTIONS", "PATCH", "CONNECT", "TRACE"};
 	int bit = 0x01;
-	for(int i = 0; i < 3; i++)
+	for(int i = 0; i < 9; i++)
 	{
 		if (methods[i] == str)
-		{
 			method |= bit;
-		}
 		bit <<= 1;
 	}
 	return (method);
@@ -146,6 +144,16 @@ void	Request_parser::parse_request(Client& client)
 	m_parse_request_header(client);
 }
 
+
+std::string		transform_tolower(std::string str)
+{
+	std::string::iterator	it = str.begin();
+
+	for(; it != str.end(); it++)
+		*it = std::tolower(*it);
+	return str;
+}
+
 void	Request_parser::m_parse_request_header (Client& client)
 {
 	Server *server = client.server;
@@ -223,7 +231,7 @@ void	Request_parser::m_parse_request_header (Client& client)
 	while (__l_file.size() > 1)
 	{
 		__l_line = m_next_line();
-		if (__l_line.front() == "Content-Length:" && __l_line.size() == 2)
+		if (transform_tolower(__l_line.front()) == "content-length:" && __l_line.size() == 2)
 		{
 			post_must_have_content_length = true;
 			// GET 일때 Content-Length가 들어와도 nginx 200 확인함
@@ -237,9 +245,9 @@ void	Request_parser::m_parse_request_header (Client& client)
 			// 	request.body = request.body.substr(0, request.content_length);
 			// }
 		}
-		if (__l_line.front() == "Connection:" && __l_line.size() == 2 && __l_line.back() == "close")
+		if (transform_tolower(__l_line.front()) == "connection:" && __l_line.size() == 2 && __l_line.back() == "close")
 			client.keep = false;
-		if (__l_line.front() == "Content-Type:")
+		if (transform_tolower(__l_line.front()) == "content-type:")
 		{
 			__l_line.pop_front();
 			while (__l_line.size())
@@ -250,7 +258,7 @@ void	Request_parser::m_parse_request_header (Client& client)
 				__l_line.pop_front();
 			}
 		}
-		if (__l_line.front() == "Transfer-Encoding:" && __l_line.size() == 2 && __l_line.back() == "chunked")
+		if (transform_tolower(__l_line.front()) == "transfer-encoding:" && __l_line.size() == 2 && __l_line.back() == "chunked")
 		{
 			m_unchunk_after_body_clear(is_enough_body_length);
 			request.is_chunk_body = true;
