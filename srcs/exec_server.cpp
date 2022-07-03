@@ -69,7 +69,7 @@ static void event_error(Connect& cn)
 
 static void write_data_to_client(Connect& cn)
 {
-	if (cn.clients[cn.curr_event->ident]._stage == SEND_RESPONSE)
+    std::cout << "[  STAGE WRITE  ]" << std::endl;
 	if (cn.clients[cn.curr_event->ident].respond_msg != "")
 	{
 		int n;
@@ -119,10 +119,10 @@ static void read_data_from_client(Connect& cn)
 
 static void file_and_pipe_read(Connect& cn)
 {
-    std::cout << "[  STAGE READ  ]" << std::endl;
 	if (!cn.curr_event->data)
 		return ;
-	else if (cn.clients[cn.curr_event->ident]._stage == CGI_READ)
+    std::cout << "[  STAGE READ  ]" << std::endl;
+	if (cn.clients[cn.curr_event->ident]._stage == CGI_READ)
 	{
 		if (cn.clients[cn.curr_event->ident].cgi_pid != 0)
 		{
@@ -177,8 +177,6 @@ static void file_and_pipe_read(Connect& cn)
 static void file_and_pipe_write(Connect& cn)
 {
 	std::string& tmp = cn.clients[cn.clients[cn.curr_event->ident].origin_fd].tmp_buffer;
-
-    std::cout << "[  STAGE WRITE  ]" << std::endl;
 	int n = write(cn.curr_event->ident, tmp.c_str(), tmp.size());
 	if (n <= 0)
 	{
