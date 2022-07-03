@@ -70,7 +70,6 @@ static void event_error(Connect& cn)
 static void write_data_to_client(Connect& cn)
 {
 	if (cn.clients[cn.curr_event->ident]._stage == SEND_RESPONSE)
-		std::cout << "STAGE SEND_RESPONSE" << std::endl; 
 	if (cn.clients[cn.curr_event->ident].respond_msg != "")
 	{
 		int n;
@@ -101,12 +100,9 @@ static void close_client(Connect& cn)
 
 static void read_data_from_client(Connect& cn)
 {
-	if (cn.curr_event->data == 0) // read event 가 계속 발생 (keep-alive 로 열어뒀을때)
+	if (cn.curr_event->data == 0)
 		return ;
 	char buf[cn.curr_event->data + 1];
-	if (cn.clients[cn.curr_event->ident]._stage == GET_REQUEST)
-		std::cout << "STAGE GET_REQUEST" << std::endl; 
-
 	int n = read(cn.curr_event->ident, buf, cn.curr_event->data);
 	if (n <= 0)
 	{
@@ -123,11 +119,11 @@ static void read_data_from_client(Connect& cn)
 
 static void file_and_pipe_read(Connect& cn)
 {
+    std::cout << "[  STAGE READ  ]" << std::endl;
 	if (!cn.curr_event->data)
 		return ;
 	else if (cn.clients[cn.curr_event->ident]._stage == CGI_READ)
 	{
-		std::cout << "STAGE CGI_READ" << std::endl;
 		if (cn.clients[cn.curr_event->ident].cgi_pid != 0)
 		{
 			int status;
@@ -159,7 +155,6 @@ static void file_and_pipe_read(Connect& cn)
 	}
 	else if (cn.clients[cn.curr_event->ident]._stage == FILE_READ)
 	{
-		std::cout << "STAGE FILE_READ" << std::endl;
 		char buf[cn.curr_event->data + 1];
 
 		int n = read(cn.curr_event->ident, buf, cn.curr_event->data);
@@ -183,10 +178,7 @@ static void file_and_pipe_write(Connect& cn)
 {
 	std::string& tmp = cn.clients[cn.clients[cn.curr_event->ident].origin_fd].tmp_buffer;
 
-	if (cn.clients[cn.curr_event->ident]._stage == CGI_WRITE)
-		std::cout << "STAGE CGI_WRITE" << std::endl;
-	else if (cn.clients[cn.curr_event->ident]._stage == FILE_WRITE)
-		std::cout << "STAGE FILE_WRITE" << std::endl;
+    std::cout << "[  STAGE WRITE  ]" << std::endl;
 	int n = write(cn.curr_event->ident, tmp.c_str(), tmp.size());
 	if (n <= 0)
 	{

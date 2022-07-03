@@ -179,7 +179,6 @@ static void method_post(Connect& cn, Request& request, Client& client)
 			client._stage = SET_RESOURCE;
 			return ;
 		}
-		std::cout << file_fd << " : " << path << std::endl;
 		change_events(cn.change_list, file_fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
 		Client c1;
 		c1.origin_fd = cn.curr_event->ident;
@@ -254,8 +253,6 @@ static void make_redirection(Connect& cn, Client& client)
 
 void response(Connect& cn, Client& client, Request& request)
 {
-	if (cn.clients[cn.curr_event->ident]._stage == SET_RESOURCE)
-		std::cout << "STAGE SET_RESOURCE" << std::endl; 
 	if (!client.is_io_done)
 	{
 		if (!request.status_code)
@@ -284,7 +281,6 @@ void response(Connect& cn, Client& client, Request& request)
 			client._stage = SEND_RESPONSE;
 			return ;
 		}
-		std::cout << file_fd << " : " << client.rs.file_path << std::endl;
 		change_events(cn.change_list, file_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
 		Client c1;
 		c1.origin_fd = cn.curr_event->ident;
