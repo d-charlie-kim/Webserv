@@ -69,7 +69,7 @@ static void event_error(Connect& cn)
 
 static void write_data_to_client(Connect& cn)
 {
-    std::cout << "[  STAGE WRITE  ]" << std::endl;
+    std::cout << "[  STAGE WRITE ]" << std::endl;
 	if (cn.clients[cn.curr_event->ident].respond_msg != "")
 	{
 		int n;
@@ -102,6 +102,7 @@ static void read_data_from_client(Connect& cn)
 {
 	if (cn.curr_event->data == 0)
 		return ;
+	std::cout << "[  STAGE READ  ]" << std::endl;
 	char buf[cn.curr_event->data + 1];
 	int n = read(cn.curr_event->ident, buf, cn.curr_event->data);
 	if (n <= 0)
@@ -121,7 +122,6 @@ static void file_and_pipe_read(Connect& cn)
 {
 	if (!cn.curr_event->data)
 		return ;
-    std::cout << "[  STAGE READ  ]" << std::endl;
 	if (cn.clients[cn.curr_event->ident]._stage == CGI_READ)
 	{
 		if (cn.clients[cn.curr_event->ident].cgi_pid != 0)

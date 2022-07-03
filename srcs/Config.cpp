@@ -260,6 +260,11 @@ void		Config::m_parse_server(std::list<std::string> &line)
 		__s_brace.pop();
 	}
 	m_check_location_and_get_method(new_server);
+	if (!new_server.server_name.empty())
+	{
+		std::fstream fs("/etc/hosts", std::ios_base::app);
+		fs << "127.0.0.1		" << new_server.server_name << "\n";
+	}
 	__v_server_list.push_back(new_server);
 	if (!__l_file.size())
 		throw std::invalid_argument("Invalid config file : The file is already over");

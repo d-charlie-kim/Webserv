@@ -77,8 +77,6 @@ void	Cgi::m_set_env()
 void	Cgi::m_set_argv()
 {
 	std::string cgi_path = __cwd + "/php-cgi";
-	if (__request.location->cgi == ".bla")
-		cgi_path = __cwd + "/cgi-bin/cgi_tester";
 	__argv[0] = new char[cgi_path.size() + 1];
 	strcpy(__argv[0], cgi_path.c_str());
 	__argv[0][cgi_path.size()] = 0;
