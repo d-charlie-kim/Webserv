@@ -43,7 +43,7 @@ void		Config::m_parse_listen(Server& new_server, std::list<std::string>& line)
 	std::stringstream iss(str);
 	int port;
 	iss >> port;
-	if (iss.fail() || !iss.eof() || port < 0 || port > 49151) // atoi 로는 에러가 나서 0이 return 된건지, 원래 값이 0인건지 구분할 수 없음. 그래서 stringstream 사용
+	if (iss.fail() || !iss.eof() || port < 0 || port > 49151)
 		throw std::invalid_argument("Invalid config file : Port number is incorrect");
 	new_server.listen.second = port;
 }
@@ -62,8 +62,7 @@ void		Config::m_parse_root(std::list<std::string>& line, Location& loc)
 		throw std::invalid_argument("Invalid config file : The number of root arguments is incorrect");
 	if (line.back().front() == '/')
 	{
-		char buf[1000];
-		loc.root = getcwd(buf, 1000);
+		loc.root = ".";
 		loc.root += line.back();
 	}
 	else
@@ -117,15 +116,6 @@ void		Config::m_parse_error_page(std::list<std::string>& line, Location& loc)
 	if (line.size() < 2)
 		throw std::invalid_argument("Invalid config file : The number of error page arguments is incorrect");
 
-	// std::ifstream fs;
-	// 이전에도 얘기 했지만 config file 의 error_page 는 그 error num 의 페이지를 대체하는 것이다.
-	// 근데 이게 default error page 를 말하는 건지 모르겠다...
-	// 그리고 우리는 error page 를 만든다... 이때 에러처리를 하면 안 될 것 같은데;;
-	// check valid error_page
-	// fs.open(line.back(), std::ios::in);
-	// if (!fs.is_open())
-	//	throw std::invalid_argument("cannot find error_page");
-	// fs.close();
 	loc.p_error_page.second = line.back();
 	line.pop_back();
 
@@ -162,7 +152,6 @@ void		Config::m_parse_return(std::list<std::string>& line, Location& loc)
 	line.pop_front();
 	int code = atoi(line.front().c_str());
 
-	// code 300 번대 아니면 오류
 	if (line.size() != 2 || code < 300 || code > 399)
 		throw std::invalid_argument("Invalid config file : Return number is wrong");
 	loc.p_return.first = code;
@@ -221,7 +210,6 @@ void		Config::m_check_location_and_get_method(Server& new_server)
 	}
 }
 
-
 void		Config::m_check_route(std::vector<Location>& locs, std::string route)
 {
 	if (locs.empty())
@@ -277,7 +265,7 @@ void		Config::m_parse_server(std::list<std::string> &line)
 		throw std::invalid_argument("Invalid config file : The file is already over");
 	if (line.size() != 1)
 		throw std::invalid_argument("Invalid config file : There is a character after braces, server part");
-	line = m_next_line(0); // server } 닫는 부분
+	line = m_next_line(0);
 	__s_brace.pop();
 }
 

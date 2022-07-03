@@ -1,15 +1,6 @@
 #include "Cgi.hpp"
 #include "utils.hpp"
 
-#define NC "\033[0m"
-#define BLCK "\033[30m"
-#define RED  "\033[31m"
-#define GREN "\033[32m"
-#define YLLW "\033[33m"
-#define BLUE "\033[34m"
-#define PRPL "\033[35m"
-#define AQUA "\033[36m"
-
 Cgi::Cgi(Connect& connect, Client& client)
 	: __cn(connect), __request(client.rq), __v_envlist(std::vector<std::string>(15, ""))
 {
@@ -19,7 +10,7 @@ Cgi::Cgi(Connect& connect, Client& client)
 	__query_string = m_get_query_string();
 	__v_envlist[0] = "REQUEST_METHOD=" + m_get_method(__request.method);
 	__v_envlist[1] = "CONTENT_LENGTH=" + ft_itoa(__request.content_length);
-	__v_envlist[2] = "CONTENT_TYPE=" +  __request.content_type; //request헤더 content_type 추가하기
+	__v_envlist[2] = "CONTENT_TYPE=" +  __request.content_type;
 	__v_envlist[3] = "GATEWAY_INTERFACE=CGI/1.1";
 	__v_envlist[4] = "DOCUMENT_ROOT=" + __cwd;
 	__v_envlist[5] = "PATH_TRANSLATED=" + __requested_uri;
@@ -85,7 +76,7 @@ void	Cgi::m_set_env()
 
 void	Cgi::m_set_argv()
 {
-	std::string cgi_path = __cwd + "/php-cgi"; //cgi exec 변경
+	std::string cgi_path = __cwd + "/php-cgi";
 	if (__request.location->cgi == ".bla")
 		cgi_path = __cwd + "/cgi-bin/cgi_tester";
 	__argv[0] = new char[cgi_path.size() + 1];
@@ -131,24 +122,18 @@ int		Cgi::m_cgi_exec()
 	}
 	close(pipe_in[READ]);
 	close(pipe_out[WRITE]);
-	// 아래 구문을 event처리시 확인(오류시 리턴값 때문), pid 저장 필요??
-	// int status;
-	// waitpid(pid, &status, 0);
-	// if (WIFEXITED(status) && WEXITSTATUS(status)) //wifexited:0이 아니면 자식 정상종료, wexitstatus:자식 exit반환값
-	// 	return ("500");
-	change_events(__cn.change_list, pipe_in[WRITE], EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL); // write가 더이상 필요한가??
+	change_events(__cn.change_list, pipe_in[WRITE], EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
 	change_events(__cn.change_list, pipe_out[READ], EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
 	Client c1;
 	Client c2;
-	c1.origin_fd = __cn.curr_event->ident; //현재 클라이언트 socket fd
-	c2.origin_fd = __cn.curr_event->ident; //현재 클라이언트 socket fd
+	c1.origin_fd = __cn.curr_event->ident;
+	c2.origin_fd = __cn.curr_event->ident;
 	c2.cgi_pid = pid;
 	c1._stage = CGI_WRITE;
 	c2._stage = CGI_READ;
 	__cn.clients.insert(std::make_pair(pipe_in[WRITE], c1));
 	__cn.clients.insert(std::make_pair(pipe_out[READ], c2));
 	__cn.clients[__cn.curr_event->ident]._stage = WAIT;
-	std::cout << "@@@@@@ tmp buf in cgi : " << PRPL << __cn.clients[__cn.curr_event->ident].tmp_buffer << NC << std::endl;
 	m_delete();
 	return (0);
 }

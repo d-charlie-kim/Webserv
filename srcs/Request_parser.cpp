@@ -248,7 +248,7 @@ void	Request_parser::m_parse_request_header (Client& client)
 	if (!post_must_have_content_length)
 		request.status_code = 411;
 	if (is_enough_body_length)
-		client._stage = SET_RESOURCE; 
+		client._stage = SET_RESOURCE;
 }
 
 void split_line2(std::string	origin, std::list<std::string>& list)

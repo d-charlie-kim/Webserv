@@ -70,8 +70,8 @@ static std::string get_directory_name(Request& request, std::string path)
 static void make_auto_index_page(Client& client, Request& request, Response& response)
 {
 	std::string	auto_index = "<!DOCTYPE html>\r\n<html lang=\"en\">\r\n<head>\r\n	<style>\r\n		body {\r\n			padding: 30px;\r\n		}\r\n		h1, h2 {\r\n			font-weight: 400;\r\n			margin: 0;\r\n		}\r\n		h1 > span {\r\n			font-weight: 900;\r\n		}\r\n		ul > li {\r\n			font-size: 20px;\r\n		}\r\n	</style>\r\n	<meta charset=\"UTF-8\">\r\n	<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n	<title>Webserv index of $1</title>\r\n</head>\r\n<body>\r\n	<h1>Webserv index of <span>$1</span></h1>\r\n	<hr>\r\n	<ul>\r\n		<pre>$2</pre>\r\n	</ul>\r\n	<hr>\r\n</body>\r\n</html>\r\n";
-	std::string name_dir = get_directory_name(request, request.path); // 해당 directory 이름
-	std::string read_dir = make_hyper_link(request, request.location->root + request.path); // readir 함수 사용해서 읽어온 파일 목록
+	std::string name_dir = get_directory_name(request, request.path);
+	std::string read_dir = make_hyper_link(request, request.location->root + request.path);
 
 	if (read_dir.empty())
 		return ;
@@ -97,14 +97,14 @@ static void method_get(Connect& cn, Request& request, Response& response)
 {
 	std::ifstream test_fs;
 	std::string check_route;
-	if (request.is_cgi) // cgi 일때
+	if (request.is_cgi)
 	{
 		Cgi cgi(cn, cn.clients[cn.curr_event->ident]);
 		request.status_code = cgi.m_cgi_exec();
 	}
-	else if (request.is_directory) // directory 일때 (파일이 아닐 때)
+	else if (request.is_directory)
 	{
-		check_route = request.location->root + request.path; // root + (url에서 ? 앞부분) 이 유효한지만 체크 (파일 열때랑 동일)
+		check_route = request.location->root + request.path;
 		if (check_route[check_route.size() - 1] != '/')
 			check_route += "/";
 		test_fs.open(check_route);
@@ -113,7 +113,7 @@ static void method_get(Connect& cn, Request& request, Response& response)
 		else
 		{
 			test_fs.close();
-			for (std::vector<std::string>::iterator iter = request.location->v_index.begin(); iter != request.location->v_index.end(); iter++) // location에 명시되어 있는 index페이지가 유효한지 하나씩 체크, 유효한거 처음 발견하면 file_path 저장 후 break;
+			for (std::vector<std::string>::iterator iter = request.location->v_index.begin(); iter != request.location->v_index.end(); iter++)
 			{
 				std::string index_check = check_route + *iter;
 				test_fs.open(index_check);
@@ -126,13 +126,13 @@ static void method_get(Connect& cn, Request& request, Response& response)
 				}
 				test_fs.close();
 			}
-			if (request.status_code == 0 && request.location->auto_index) // index파일이 전부 유효하지 않은데(그래서 status_code가 0), auto_index는 켜져 있을 때
+			if (request.status_code == 0 && request.location->auto_index)
 				make_auto_index_page(cn.clients[cn.curr_event->ident], request, response);
-			else if (request.status_code == 0) // index 파일이 전부 유효하지 않은데, auto_index도 꺼져 있을 때
+			else if (request.status_code == 0)
 				request.status_code = 404;
 		}
 	}
-	else // 파일일때, root + (url에서 ? 앞부분) 이 유효한지만 체크, 유효하면 file_path에 넣어준다. 유효하지 않으면 404.
+	else
 	{
 		check_route = request.location->root + request.path;
 		test_fs.open(check_route);
@@ -152,24 +152,24 @@ static void method_post(Connect& cn, Request& request, Client& client)
 	struct stat		status;
 	std::string path = request.location->root + request.path;
 
-	if (request.is_directory) // 디렉토리라면
+	if (request.is_directory)
 		request.status_code = 405;
-	else if (!request.content_length)	// POST 요청에는 반드시 body 및 content-length가 필요함, 없을 시 411 length required
+	else if (!request.content_length)
 		request.status_code = 411;
-	else if (request.content_length > request.location->client_max_body_size) // 우리가 허용한 body를 넘을 때
+	else if (request.content_length > request.location->client_max_body_size)
 		request.status_code = 413;
-	else if (request.is_cgi) // cgi 라면
+	else if (request.is_cgi)
 	{
 		Cgi cgi(cn, client);
 		request.status_code = cgi.m_cgi_exec();
 	}
-	else // 아니면 일반 POST
+	else
 	{
 		if (stat(path.c_str(), &status))
-			request.status_code = 201; //없어서 CREATED
+			request.status_code = 201;
 		else
 		{
-			request.status_code = 200; //있어서 OK
+			request.status_code = 200;
 			client.rs.file_path = cn.first_line[200].second;
 		}
 		int file_fd = open(path.c_str(), O_RDWR|O_CREAT|O_APPEND, 0644);
@@ -179,7 +179,6 @@ static void method_post(Connect& cn, Request& request, Client& client)
 			client._stage = SET_RESOURCE;
 			return ;
 		}
-		std::cout << file_fd << " : " << path << std::endl;
 		change_events(cn.change_list, file_fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
 		Client c1;
 		c1.origin_fd = cn.curr_event->ident;
@@ -195,9 +194,9 @@ static void method_delete(Request& request, Client& client)
 	struct stat		status;
 	std::string path = request.location->root + request.path;
 
-	if (stat(path.c_str(), &status)) // 존재하지 않는 경로
+	if (stat(path.c_str(), &status))
 		request.status_code = 404;
-	else if (request.is_directory) // 디렉토리
+	else if (request.is_directory)
 		request.status_code = 405;
 	else
 	{
@@ -206,7 +205,7 @@ static void method_delete(Request& request, Client& client)
 			request.status_code = 405;
 		else 
 		{
-			request.status_code = 200; // 200이 아닌 번호를 선택한 경우, respons skip 하는 부분에서 추가해줘야 함.
+			request.status_code = 200;
 			client.rs.body = "<!DOCTYPE html>\r\n<html>\r\n<head>\r\n	<title>Delete request Done</title>\r\n</head>\r\n<body>\r\n	<h1>Your Delete request Done!</h1>\r\n</body>\r\n</html>\r\n";
 			client.rs.header = "HTTP/1.1 200 OK\r\nContent-Length: ";
 			client.rs.header += ft_itoa(client.rs.body.size());
@@ -214,15 +213,6 @@ static void method_delete(Request& request, Client& client)
 			client._stage = SEND_RESPONSE;
 		}
 	}
-		/*
-		NOTE delete 메서드 처리 후 어떤 응답보낼지 선택가능해보입니다 그냥 204로만 해도 될까요
-
-			응 답
-		DELETE 메서드를 성공적으로 적용한 후에 사용할 수 있는 응답 상태 코드는 다음과 같이 몇 가지가 있습니다.
-		아마도 명령을 성공적으로 수행할 것 같으나 아직은 실행하지 않은 경우 202 (Accepted) 상태 코드.
-		명령을 수행했고 더 이상 제공할 정보가 없는 경우 204 (No Content) 상태 코드.
-		명령을 수행했고 응답 메시지가 이후의 상태를 설명하는 경우 200 (OK) 상태 코드.
-	*/
 }
 
 static void method_exe(Connect& cn, Client& client)
@@ -263,8 +253,6 @@ static void make_redirection(Connect& cn, Client& client)
 
 void response(Connect& cn, Client& client, Request& request)
 {
-	if (cn.clients[cn.curr_event->ident]._stage == SET_RESOURCE)
-		std::cout << "STAGE SET_RESOURCE" << std::endl; 
 	if (!client.is_io_done)
 	{
 		if (!request.status_code)
@@ -293,7 +281,6 @@ void response(Connect& cn, Client& client, Request& request)
 			client._stage = SEND_RESPONSE;
 			return ;
 		}
-		std::cout << file_fd << " : " << client.rs.file_path << std::endl;
 		change_events(cn.change_list, file_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
 		Client c1;
 		c1.origin_fd = cn.curr_event->ident;
@@ -304,7 +291,7 @@ void response(Connect& cn, Client& client, Request& request)
 	}
 	else if (client.is_io_done)
 	{
-		if (request.is_cgi && request.status_code) // error.html 읽으러 다시 들어오세요
+		if (request.is_cgi && request.status_code)
 		{
 			request.is_cgi = false;
 			client.is_io_done = false;
@@ -321,7 +308,11 @@ void response(Connect& cn, Client& client, Request& request)
 		}
 		client.rs.body = client.tmp_buffer;
 		client.respond_msg = client.rs.header + "\r\n";
-		client.respond_msg += "Content-Length: " + ft_itoa(client.rs.body.size());
+		client.respond_msg += "Content-Length: ";
+		if (client.rs.body == "")
+			client.respond_msg += "0";
+		else
+			client.respond_msg += ft_itoa(client.rs.body.size());
 		client.respond_msg += "\r\n\r\n";
 		client.respond_msg += client.rs.body;
 		client.is_io_done = false;

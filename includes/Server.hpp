@@ -10,11 +10,8 @@
 #define POST 0x02
 #define DELETE 0x04 
 
-
 struct Location
 {
-	private:
-		// Location& Location::operator=(const )
 	public:
 		bool						auto_index;
 		int							methods;
