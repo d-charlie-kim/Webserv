@@ -9,9 +9,9 @@ static int		parse_method(std::string str)
 {
 	int	method = 0;
 
-	const char *methods[9] = {"GET", "POST", "DELETE", "HEAD", "PUT", "OPTIONS", "PATCH", "CONNECT", "TRACE"};
+	const char *methods[3] = {"GET", "POST", "DELETE"};
 	int bit = 0x01;
-	for(int i = 0; i < 9; i++)
+	for(int i = 0; i < 3; i++)
 	{
 		if (methods[i] == str)
 			method |= bit;
