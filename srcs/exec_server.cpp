@@ -3,15 +3,6 @@
 #include "Connect.hpp"
 #include "utils.hpp"
 
-#define NC "\033[0m"
-#define BLCK "\033[30m"
-#define RED  "\033[31m"
-#define GREN "\033[32m"
-#define YLLW "\033[33m"
-#define BLUE "\033[34m"
-#define PRPL "\033[35m"
-#define AQUA "\033[36m"
-
 static int set_server(Server& server, int& reuse)
 {
 	int server_socket;
@@ -53,7 +44,6 @@ static void set_events_servers(std::vector<struct kevent>& change_list, std::map
 
 static void disconnect_client(int client_fd, std::map<int, Client>& clients)
 {
-    std::cout << "client disconnected: " << client_fd << std::endl;
     close(client_fd);
     clients.erase(client_fd);
 }
@@ -93,8 +83,6 @@ static void write_data_to_client(Connect& cn)
         }
         else
         {
-            std::cout << "client " << cn.curr_event->ident << " write data"<< std::endl;
-            std::cout << cn.clients[cn.curr_event->ident].respond_msg << std::endl;
             if (cn.clients[cn.curr_event->ident].keep == 0)
                 disconnect_client(cn.curr_event->ident, cn.clients);
             else
@@ -110,7 +98,6 @@ static void close_client(Connect& cn)
     cn.clients[cn.curr_event->ident]._stage = GET_REQUEST;
     cn.clients[cn.curr_event->ident].client_clear();
 }
-
 
 static void read_data_from_client(Connect& cn)
 {
@@ -131,7 +118,6 @@ static void read_data_from_client(Connect& cn)
     {
         buf[n] = 0;
         cn.clients[cn.curr_event->ident].request_msg.append(buf, n);
-        std::cout << YLLW "client " << cn.curr_event->ident << " msg : " NC << cn.clients[cn.curr_event->ident].request_msg << std::endl;
     }
 }
 
@@ -227,7 +213,6 @@ static void get_client(Connect& cn)
         std::cerr << "client accept error!" << std::endl;
 		return ;
     }
-    std::cout << BLUE "get client : " NC << client_socket << std::endl;
     fcntl(client_socket, F_SETFL, O_NONBLOCK);
     change_events(cn.change_list, client_socket, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
     change_events(cn.change_list, client_socket, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
