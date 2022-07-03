@@ -14,7 +14,7 @@ static int		parse_method(std::string str)
 	for(int i = 0; i < 3; i++)
 	{
 		if (methods[i] == str)
-			method |= bit;
+			method = bit;
 		bit <<= 1;
 	}
 	return (method);
@@ -110,7 +110,7 @@ std::list<std::string>		split_line(std::string	origin)
 size_t		unchunk_data(std::list<std::string> list, std::string& body, int &status_code)
 {
 	size_t			length_size;
-	while(!list.empty())
+	while(list.size() > 1)
 	{
 		std::stringstream	iss(list.front());
 		list.pop_front();
@@ -128,9 +128,9 @@ void		Request_parser::m_unchunk_after_body_clear(bool& is_enough_body_length)
 	std::list<std::string>		list = split_line(request.body);
 	request.body.clear();
 	size_t last_length = unchunk_data(list, request.body, request.status_code);
-	
 	if (last_length != 0)
 		is_enough_body_length = false;
+	request.content_length = request.body.size();
 }
 
 void	Request_parser::parse_request(Client& client)
@@ -251,27 +251,41 @@ void	Request_parser::m_parse_request_header (Client& client)
 		client._stage = SET_RESOURCE;
 }
 
+void split_line2(std::string	origin, std::list<std::string>& list)
+{
+	size_t			start = origin.find("\r\n\r\n") + 4;
+	size_t 			pos = origin.find("\r\n", start);
+
+	while (start != std::string::npos && pos != std::string::npos)
+	{
+		std::string		line = origin.substr(start, pos - start);
+		list.push_back(line);
+		start = pos + 2;
+		pos = origin.find("\r\n", start);
+	}
+}
+
+
 void request_msg_parsing(Client& client)
 {
 	if(client.rq.content_length)
 	{
-		size_t			body_start_pos = client.request_msg.find("\r\n\r\n") + 4;
-		std::string		body = client.request_msg.substr(body_start_pos);
-		
 		if (client.rq.is_chunk_body)
 		{
-			std::list<std::string> list = split_line(body);
+			std::list<std::string> list;
+			split_line2(client.request_msg, list);
 			client.rq.body.clear();
 			size_t last_length = unchunk_data(list, client.rq.body, client.rq.status_code);
 			if (client.rq.status_code || last_length == 0)
 				client._stage = SET_RESOURCE;
+			client.rq.content_length = client.rq.body.size();
 			return ;
 		}
-		client.rq.body = body;
-		if (body.size() >= static_cast<size_t>(client.rq.content_length))
+		client.rq.body = client.request_msg.substr(client.request_msg.find("\r\n\r\n") + 4);
+		if (client.rq.body.size() >= static_cast<size_t>(client.rq.content_length))
 			client._stage = SET_RESOURCE;
-		if (body.size() > static_cast<size_t>(client.rq.content_length))
-			client.rq.body = body.substr(0, client.rq.content_length);
+		if (client.rq.body.size() > static_cast<size_t>(client.rq.content_length))
+			client.rq.body = client.rq.body.substr(0, client.rq.content_length);
 		return ;
 	}
 	Request_parser		parser(client.request_msg);
