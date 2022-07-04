@@ -115,7 +115,6 @@ static void read_data_from_client(Connect& cn)
 	{
 		buf[n] = 0;
 		cn.clients[cn.curr_event->ident].request_msg.append(buf, n);
-		std::cout << cn.clients[cn.curr_event->ident].request_msg << std::endl;
 	}
 }
 
