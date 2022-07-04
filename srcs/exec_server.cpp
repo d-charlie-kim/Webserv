@@ -16,8 +16,8 @@ static int set_server(Server& server, int& reuse)
 	server_addr.sin_port = htons(server.listen.second);
 	if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) == -1)
 		throw std::runtime_error("setsockopt error\n" + std::string(strerror(errno)));
-	if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEPORT, &reuse, sizeof(reuse)) == -1)
-		throw std::runtime_error("setsockopt error\n" + std::string(strerror(errno)));
+	// if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEPORT, &reuse, sizeof(reuse)) == -1)
+	// 	throw std::runtime_error("setsockopt error\n" + std::string(strerror(errno)));
 	if (bind(server_socket, reinterpret_cast<struct sockaddr*>(&server_addr), sizeof(server_addr)) == -1)
 		throw std::runtime_error("bind() error\n" + std::string(strerror(errno)));
 	if (listen(server_socket, 1024) == -1)
