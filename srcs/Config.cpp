@@ -274,6 +274,24 @@ void		Config::m_parse_server(std::list<std::string> &line)
 	__s_brace.pop();
 }
 
+void		Config::m_check_dup_port()
+{
+	int server_size =  static_cast<int>(__v_server_list.size());
+
+	if (server_size <= 1)
+		return ;
+	for (int i = 0; i < server_size; i++)
+	{
+		int port = __v_server_list[i].listen.second;
+		for (int j = i + 1; j < server_size; j++)
+		{
+			j = __v_server_list[j].listen.second;
+			if (j == port)
+				throw std::invalid_argument("Invalid config file: There are servers using a same port");
+		}
+	}
+}
+
 void		Config::parse_file()
 {
 	std::list<std::string> line = __l_file.front();
@@ -286,6 +304,7 @@ void		Config::parse_file()
 		__s_brace.push("server");
 		m_parse_server(line);
 	}
+	m_check_dup_port();
 }
 
 static std::list<std::string> split_line(std::string str)
