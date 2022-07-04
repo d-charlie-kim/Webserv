@@ -40,6 +40,8 @@ void		Config::m_parse_listen(Server& new_server, std::list<std::string>& line)
 		new_server.listen.first = str.substr(0, pos);
 		str = str.substr(pos + 1);
 	}
+	else
+		new_server.listen.first = "0.0.0.0";
 	std::stringstream iss(str);
 	int port;
 	iss >> port;
