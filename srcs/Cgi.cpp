@@ -100,9 +100,13 @@ int		Cgi::m_cgi_exec()
 	int		pipe_in[2];
 	int 	pipe_out[2];
 	pid_t	pid;
+	std::fstream check;
 
 	m_set_env();
 	m_set_argv();
+	check.open(__argv[1]);
+	if (!check.is_open())
+		return (404);
 	if (pipe(pipe_in) == -1 || pipe(pipe_out) == -1)
 		return (500);
 	if ((pid = fork()) == -1)

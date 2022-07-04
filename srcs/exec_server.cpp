@@ -115,6 +115,7 @@ static void read_data_from_client(Connect& cn)
 	{
 		buf[n] = 0;
 		cn.clients[cn.curr_event->ident].request_msg.append(buf, n);
+		std::cout << cn.clients[cn.curr_event->ident].request_msg << std::endl;
 	}
 }
 
@@ -132,6 +133,9 @@ static void file_and_pipe_read(Connect& cn)
 			{
 				std::cerr << "cgi wait error!" << std::endl;
 				cn.clients[cn.clients[cn.curr_event->ident].origin_fd].rq.status_code = 500;
+				cn.clients[cn.clients[cn.curr_event->ident].origin_fd]._stage = SET_RESOURCE;
+				disconnect_client(cn.curr_event->ident, cn.clients);
+				return ;
 			}
 		}
 		char buf[1025];
@@ -177,17 +181,23 @@ static void file_and_pipe_read(Connect& cn)
 static void file_and_pipe_write(Connect& cn)
 {
 	std::string& tmp = cn.clients[cn.clients[cn.curr_event->ident].origin_fd].tmp_buffer;
+	if (tmp.size() == 0)
+	{
+		cn.clients[cn.clients[cn.curr_event->ident].origin_fd].tmp_buffer.clear();
+		if (cn.clients[cn.curr_event->ident]._stage == FILE_WRITE)
+			cn.clients[cn.clients[cn.curr_event->ident].origin_fd]._stage = SET_RESOURCE;
+		disconnect_client(cn.curr_event->ident, cn.clients);
+		return ;
+	}
 	int n = write(cn.curr_event->ident, tmp.c_str(), tmp.size());
 	if (n <= 0)
 	{
-		if (!(n == 0 && cn.clients[cn.clients[cn.curr_event->ident].origin_fd].rq.method == GET))
-		{
-			std::cerr << "file write error! : " << n << std::endl;
-			cn.clients[cn.clients[cn.curr_event->ident].origin_fd].rq.status_code = 500;
-			cn.clients[cn.clients[cn.curr_event->ident].origin_fd]._stage = SET_RESOURCE;
-			disconnect_client(cn.curr_event->ident, cn.clients);
-			return ;
-		}
+		if (n < 0)
+			std::cerr << "file & pipe write error! : " << n << std::endl;
+		cn.clients[cn.clients[cn.curr_event->ident].origin_fd].rq.status_code = 500;
+		cn.clients[cn.clients[cn.curr_event->ident].origin_fd]._stage = SET_RESOURCE;
+		disconnect_client(cn.curr_event->ident, cn.clients);
+		return ;
 	}
 	cn.clients[cn.clients[cn.curr_event->ident].origin_fd].tmp_buffer.clear();
 	if (cn.clients[cn.curr_event->ident]._stage == FILE_WRITE)

@@ -155,8 +155,6 @@ static void method_post(Connect& cn, Request& request, Client& client)
 
 	if (request.is_directory)
 		request.status_code = 405;
-	else if (!request.content_length)
-		request.status_code = 411;
 	else if (request.content_length > request.location->client_max_body_size)
 		request.status_code = 413;
 	else if (request.is_cgi)
