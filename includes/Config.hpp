@@ -41,6 +41,7 @@ class Config
 		void					m_check_default_location(Location& loc);
 		void					m_check_route(std::vector<Location>& locs, std::string route);
 		void					m_check_location_and_get_method(Server& new_server);
+		void					m_check_dup_port();
 
 	public:
 		Config();
