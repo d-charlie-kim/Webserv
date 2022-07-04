@@ -55,6 +55,7 @@ static std::string make_hyper_link(Request& request, std::string path)
 		a_tag += file->d_name;
 		a_tag += "</a>\r\n";
 	}
+	closedir(dir_ptr);
 	return a_tag;
 }
 
