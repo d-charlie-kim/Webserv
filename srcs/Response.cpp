@@ -282,6 +282,13 @@ void response(Connect& cn, Client& client, Request& request)
 			client._stage = SEND_RESPONSE;
 			return ;
 		}
+		struct stat sb;
+		stat(client.rs.file_path.c_str(), &sb);
+		if (sb.st_size == 0)
+		{
+			client.is_io_done = true;
+			return ;
+		}
 		change_events(cn.change_list, file_fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
 		Client c1;
 		c1.origin_fd = cn.curr_event->ident;
