@@ -1,5 +1,5 @@
-#ifndef Client_HPP
-#define Client_HPP
+#ifndef CLIENT_HPP
+#define CLIENT_HPP
 
 #include <string>
 #include "Server.hpp"
