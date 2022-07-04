@@ -64,7 +64,7 @@ static std::string get_directory_name(Request& request, std::string path)
 	if (path == "/")
 		path = request.location->root + request.location->route;
 	if (path[path.size() - 1] == '/')
-		path = path.substr(0, path.size() - 2);
+		path = path.substr(0, path.size() - 1);
 	return (path.substr(path.rfind("/")));
 }
 
