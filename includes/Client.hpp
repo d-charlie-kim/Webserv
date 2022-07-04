@@ -20,7 +20,7 @@ enum Stage
 	FILE_WRITE,
 	FILE_READ,
 	CLOSE,
-	WAIT,
+	WAIT
 };
 
 struct Client
