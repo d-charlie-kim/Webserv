@@ -1,5 +1,5 @@
-#ifndef REQUEST_HPP
-#define REQUEST_HPP
+#ifndef REQUEST_PARSER_HPP
+#define REQUEST_PARSER_HPP
 
 #include <iostream>
 #include <fstream>
